@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "designacoes"
+version = "0.1.0"
+description = ""
+authors = ["Edson"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pandas = "^2.0.2"
+matplotlib = "^3.7.1"
+python-constraint = "^1.4.0"
+pytest = "^7.3.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
