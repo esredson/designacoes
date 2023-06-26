@@ -32,17 +32,17 @@ class Agenda:
 
     def _incluir_datas_extras(self, datas_extras):
         for dt in datas_extras:
-            assert not dt in self._datas, f"Data extra ${dt} já consta entre as datas programadas"
+            assert not dt in self._datas, f"Data extra {dt} já consta entre as datas programadas"
         for dt in datas_extras:
             self._datas.append(dt)
-        self._datas.sort
+        sorted(self._datas)
 
     def _gerar_cancelamentos(self, config_cancelamentos):
         cancelamentos = {}
         for str in config_cancelamentos.keys():
             cancelamentos[util.converter_string_para_data(str)] = config_cancelamentos[str]
         for dt in cancelamentos.keys():
-            assert dt in self._datas, f"Data cancelada ${dt} não está entre as programadas"
+            assert dt in self._datas, f"Data cancelada {dt} não está entre as programadas"
         self._cancelamentos = cancelamentos
 
     @property

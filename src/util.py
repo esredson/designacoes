@@ -7,7 +7,7 @@ def converter_string_para_data(str):
         dia = int(match.group(1))
         mes = int(match.group(2).replace('/', '')) if match.group(2) else datetime.date.today().month
         ano = int(match.group(3).replace('/', '')) if match.group(3) else datetime.date.today().year
-    return datetime.date(ano, mes, dia)
+    return datetime.date(ano + 2000 if ano < 2000 else ano, mes, dia)
 
 def converter_strings_para_datas(strs):
     dts = []
@@ -20,7 +20,7 @@ def config(prop):
         config = json.load(file)
     return config[prop] if prop else config
 
-def calcular_qualidade_distribuicao(array, valores_referencia):
+def calcular_qualidade_distribuicao_antigo(array, valores_referencia):
     """
     Calcula o quão bem os valores de referência estão distribuídos no array. \
     O ideal é que nenhum desses valores se repita no array. Mas, quando o \
@@ -36,7 +36,34 @@ def calcular_qualidade_distribuicao(array, valores_referencia):
         indices = [i for i, val in enumerate(array) if val == ref_val]
         if len(indices) < 2:
             continue
-        distancias.append(min(np.diff(indices))) 
+        distancias.append(np.mean(np.diff(indices))) 
     if len(distancias) == 0:
         return 1.0
     return np.mean(distancias)/float(len(valores_referencia))
+
+def calcular_qtd_repeticoes_desnecessarias_antigo(array, valores_referencia):
+    valores_permitidos = []
+    qtd_repeticoes = 0
+    for i, val in enumerate(array):
+        if len(valores_permitidos) == 0:
+            valores_permitidos = list(valores_referencia)
+        if val in valores_permitidos:
+            valores_permitidos.remove(val)
+        else:
+            qtd_repeticoes+=1
+    return qtd_repeticoes
+        
+def find_last(str, array, end_index):
+    for i in range(end_index, -1, -1):
+        if array[i] == str:
+            return i
+    return -1
+
+def calcular_qtd_repeticoes_desnecessarias(array, valores_referencia):
+    qtd_vals_referencia = len(valores_referencia)
+    qtd_repeticoes = 0
+    for i, val in enumerate(array):
+        posicao_anterior = find_last(val, array, end_index=i-1)
+        if (posicao_anterior > -1 and (i - posicao_anterior) < qtd_vals_referencia):
+            qtd_repeticoes+=1
+    return qtd_repeticoes
