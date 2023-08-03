@@ -59,7 +59,32 @@ def find_last(str, array, end_index):
             return i
     return -1
 
-def calcular_qtd_repeticoes_desnecessarias(array, valores_referencia):
+def calcular_qtd_repeticoes_desnecessarias_antigo_2(array, valores_referencia):
+    valores_disponiveis = valores_referencia[:]
+    qtd_vals_referencia = len(valores_referencia)
+    qtd_repeticoes = 0
+    for i, val in enumerate(array):
+        if len(valores_disponiveis) > 0:
+            if val not in valores_disponiveis:
+                qtd_repeticoes+=1
+            else:
+                valores_disponiveis.remove(val)    
+        else:
+            posicao_anterior = find_last(val, array, end_index=i-1)
+            if i - posicao_anterior < qtd_vals_referencia:
+                qtd_repeticoes+=1
+    return qtd_repeticoes
+
+def calcular_qtd_erros_distribuicao_antigo_com_peso(array, valores_referencia):
+    qtd_vals_referencia = len(valores_referencia)
+    erro = 0
+    for i, val in enumerate(array):
+        posicao_anterior = find_last(val, array, end_index=i-1)
+        if (posicao_anterior > -1 and (i - posicao_anterior) < qtd_vals_referencia):
+            erro+=qtd_vals_referencia-(i-posicao_anterior)
+    return erro
+
+def calcular_qtd_erros_distribuicao(array, valores_referencia):
     qtd_vals_referencia = len(valores_referencia)
     qtd_repeticoes = 0
     for i, val in enumerate(array):
@@ -67,3 +92,4 @@ def calcular_qtd_repeticoes_desnecessarias(array, valores_referencia):
         if (posicao_anterior > -1 and (i - posicao_anterior) < qtd_vals_referencia):
             qtd_repeticoes+=1
     return qtd_repeticoes
+

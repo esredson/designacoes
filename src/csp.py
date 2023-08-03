@@ -8,7 +8,7 @@ class CSP:
         self._funcional = funcional
         self._agenda = agenda
         self._extra = extra
-        self._qtd_max_repeticoes_por_funcao = 6.0
+        self._qtd_max_repeticoes_por_funcao = 0
         self._solucao = None
         
     def _criar_variaveis(self, problem):
@@ -24,7 +24,7 @@ class CSP:
         for i, funcao in enumerate(self._funcional.funcoes.keys()):
             pessoas_da_funcao=self._funcional.funcoes[funcao]['pessoas']
             problem.addConstraint(
-                lambda *tupla, pessoas=pessoas_da_funcao: util.calcular_qtd_repeticoes_desnecessarias(tupla, pessoas) <= self._qtd_max_repeticoes_por_funcao,
+                lambda *tupla, pessoas=pessoas_da_funcao: util.calcular_qtd_erros_distribuicao(tupla, pessoas) <= self._qtd_max_repeticoes_por_funcao,
                 tuple(f"{i}-{j}" for j in range(len(self._agenda.datas_validas)))
             )
             
