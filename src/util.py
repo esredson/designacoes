@@ -5,7 +5,7 @@ def converter_string_para_data(str):
     match = re.match(r"^(\d{1,2})(\/\d{1,2})?(\/\d{2})?$", str)
     if match:
         dia = int(match.group(1))
-        mes = int(match.group(2).replace('/', '')) if match.group(2) else datetime.date.today().month
+        mes = int(match.group(2).replace('/', '')) if match.group(2) else datetime.date.today().month + 1
         ano = int(match.group(3).replace('/', '')) if match.group(3) else datetime.date.today().year
     return datetime.date(ano + 2000 if ano < 2000 else ano, mes, dia)
 

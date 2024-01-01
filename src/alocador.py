@@ -3,6 +3,8 @@ import random
 import time
 import util
 
+#from tqdm import tqdm
+
 class Alocador:
 
     def __init__(self, funcional, agenda, extra):
@@ -21,7 +23,7 @@ class Alocador:
         
         for _ in range(num_passos):
             solucao = self._alocar();
-            score = self._quantificar_erro_distribuicao(solucao)
+            score = self._quantificar_erro_distribuicao_por_funcao(solucao)
             if melhor_solucao is None or score < melhor_error_score:
                 melhor_solucao = solucao
                 melhor_error_score = score
@@ -79,7 +81,7 @@ class Alocador:
             ):
                 return True
             
-    def _quantificar_erro_distribuicao(self, df):
+    def _quantificar_erro_distribuicao_por_funcao(self, df):
         erro = 0
         for funcao, pessoas_alocadas in df.items():
             erro += util.quantificar_erro_distribuicao(pessoas_alocadas.values, self._funcional.funcoes[funcao]['pessoas'])
