@@ -13,33 +13,38 @@ class Alocador:
         self._agenda = agenda
         self._extra = extra
         self._solucao = None
-        self._error_score = None
+        self._score_total = None
+        self._score_vertical = None
+        self._score_horizontal = None
         self._tempo_execucao = None
 
-    def executar(self, num_passos=1000, peso_geral=1.0, peso_por_funcao=1.0):
+    def executar(self, num_passos=1000, peso_vertical=1.0, peso_horizontal=1.0):
         melhor_solucao = None
         melhor_score_total = float('inf')
-        melhor_error_score_geral = float('inf')
-        melhor_error_score_por_funcao = float('inf')
+        melhor_score_vertical = float('inf')
+        melhor_score_horizontal = float('inf')
 
         inicio = time.time()
         
         for _ in range(num_passos):
             solucao = self._alocar()
-            error_score_geral = self._quantificar_erro_distribuicao_geral(solucao)
-            error_score_por_funcao = self._quantificar_erro_distribuicao_por_funcao(solucao)
             
-            score_total = (error_score_geral * peso_geral) + (error_score_por_funcao * peso_por_funcao)
+            # Scores (quanto menor, melhor)
+            score_vertical = self._quantificar_variancia_vertical(solucao)
+            score_horizontal = self._quantificar_variancia_horizontal(solucao)
+            
+            score_total = (score_vertical * peso_vertical) + (score_horizontal * peso_horizontal)
 
             if melhor_solucao is None or score_total < melhor_score_total:
                 melhor_solucao = solucao
                 melhor_score_total = score_total
-                melhor_error_score_geral = error_score_geral
-                melhor_error_score_por_funcao = error_score_por_funcao
+                melhor_score_vertical = score_vertical
+                melhor_score_horizontal = score_horizontal
 
         self._solucao = melhor_solucao
-        self._error_score_geral = melhor_error_score_geral
-        self._error_score_por_funcao = melhor_error_score_por_funcao
+        self._score_total = melhor_score_total
+        self._score_vertical = melhor_score_vertical
+        self._score_horizontal = melhor_score_horizontal
         self._tempo_execucao = time.time() - inicio
 
         self._solucao = self._solucao.applymap(lambda v: self._funcional.pessoas[v]['nome'])
@@ -90,6 +95,40 @@ class Alocador:
                 and x['pessoa'] == pessoa
             ):
                 return True
+
+    def _quantificar_variancia_vertical(self, df):
+        scores = []
+        for pessoa in self._funcional.pessoas.keys():
+            rows, _ = np.where(df.values == pessoa)
+            rows = np.sort(rows)
+            
+            if len(rows) < 2:
+                scores.append(0)
+                continue
+            
+            intervalos = np.diff(rows)
+            # Soma do inverso dos intervalos (penaliza intervalos pequenos, ex: dias consecutivos)
+            scores.append(np.sum(1.0 / intervalos))
+            
+        return np.mean(scores) if scores else 0
+
+    def _quantificar_variancia_horizontal(self, df):
+        variancias = []
+        for pessoa in self._funcional.pessoas.keys():
+            funcoes_eligible = [f for f, data in self._funcional.funcoes.items() if pessoa in data['pessoas']]
+            
+            if not funcoes_eligible:
+                continue
+                
+            counts = []
+            for f in funcoes_eligible:
+                count = (df[f] == pessoa).sum()
+                counts.append(count)
+            
+            # Variância dos counts (penaliza desequilíbrio entre funções)
+            variancias.append(np.var(counts))
+            
+        return np.mean(variancias) if variancias else 0
             
     def _quantificar_erro_distribuicao_por_funcao(self, df):
         erro = 0
@@ -106,8 +145,16 @@ class Alocador:
         return self._solucao
     
     @property
-    def error_score(self):
-        return self._error_score
+    def score_total(self):
+        return self._score_total
+
+    @property
+    def score_vertical(self):
+        return self._score_vertical
+
+    @property
+    def score_horizontal(self):
+        return self._score_horizontal
     
     @property
     def tempo_execucao(self):
