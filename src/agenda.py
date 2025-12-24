@@ -12,7 +12,7 @@ class Agenda:
         self._gerar_cancelamentos(config["cancelamentos"])
         
     def _gerar_datas(self, dias_semana):
-        locale.setlocale(locale.LC_TIME, 'pt_PT.utf8')
+        locale.setlocale(locale.LC_TIME, 'pt_PT.UTF-8')
 
         ano = datetime.date.today().year
         mes = datetime.date.today().month
@@ -24,8 +24,8 @@ class Agenda:
                 data = datetime.date(ano, mes, dia)
             except ValueError:
                 continue
-            dia_semana = data.strftime('%a').lower()
-            if dia_semana in dias_semana:
+            dia_semana = data.strftime('%A').lower()
+            if any(d in dia_semana for d in dias_semana):
                 datas.append(data)
 
         self._datas = datas
