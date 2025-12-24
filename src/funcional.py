@@ -2,16 +2,10 @@
 class Funcional:
 
     def __init__(self, config):
-        self._cargos = config['cargos']
-        self._gerar_pessoas(config['pessoas'])
+        self._pessoas = config['pessoas']
         self._gerar_funcoes(config['funcoes']) 
         self._partes = config['partes']
         self._gerar_colisoes_proibidas(config['colisoes_proibidas'])       
-
-    def _gerar_pessoas(self, config):
-        for pessoa in config.keys():
-            assert config[pessoa]['cargo'] in self._cargos.keys(), f"Cargo da pessoa {pessoa} inválido"
-        self._pessoas = config
 
     def _gerar_funcoes(self, config):
         for funcao in config.keys():
