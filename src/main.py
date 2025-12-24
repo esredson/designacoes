@@ -14,5 +14,6 @@ csp = Alocador(funcional, agenda, extra)
 csp.executar(num_passos=10000)
  
 print(csp.solucao)
-print(csp.error_score)    
+print(csp._error_score_geral)    
+print(csp._error_score_por_funcao)    
 print(csp.tempo_execucao) 
