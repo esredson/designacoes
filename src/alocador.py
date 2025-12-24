@@ -17,23 +17,29 @@ class Alocador:
         self._score_total = None
         self._score_vertical = None
         self._score_horizontal = None
+        self._score_distribuicao = None
         self._tempo_execucao = None
 
-    def executar(self, num_passos=10000, peso_vertical=1.0, peso_horizontal=1.0, temp_inicial=100.0, resfriamento=0.995):
+    def executar(self, num_passos=10000, peso_vertical=1.0, peso_horizontal=1.0, peso_distribuicao=1.0, temp_inicial=100.0, resfriamento=0.995):
         inicio = time.time()
         
+        # Pre-calcula contagem de extras
+        extra_counts = self._contar_extras_por_pessoa()
+
         # Solução inicial
         atual_solucao = self._alocar()
         
         # Scores iniciais
         score_v = self._quantificar_variancia_vertical(atual_solucao)
         score_h = self._quantificar_variancia_horizontal(atual_solucao)
-        atual_score = (score_v * peso_vertical) + (score_h * peso_horizontal)
+        score_d = self._quantificar_variancia_distribuicao(atual_solucao, extra_counts)
+        atual_score = (score_v * peso_vertical) + (score_h * peso_horizontal) + (score_d * peso_distribuicao)
         
         melhor_solucao = atual_solucao.copy()
         melhor_score_total = atual_score
         melhor_score_vertical = score_v
         melhor_score_horizontal = score_h
+        melhor_score_distribuicao = score_d
         
         temp = temp_inicial
         
@@ -42,7 +48,8 @@ class Alocador:
             
             score_v_viz = self._quantificar_variancia_vertical(vizinho)
             score_h_viz = self._quantificar_variancia_horizontal(vizinho)
-            vizinho_score = (score_v_viz * peso_vertical) + (score_h_viz * peso_horizontal)
+            score_d_viz = self._quantificar_variancia_distribuicao(vizinho, extra_counts)
+            vizinho_score = (score_v_viz * peso_vertical) + (score_h_viz * peso_horizontal) + (score_d_viz * peso_distribuicao)
             
             delta = vizinho_score - atual_score
             
@@ -68,6 +75,7 @@ class Alocador:
                     melhor_score_total = atual_score
                     melhor_score_vertical = score_v_viz
                     melhor_score_horizontal = score_h_viz
+                    melhor_score_distribuicao = score_d_viz
             
             temp *= resfriamento
             if temp < 0.0001: # Otimização: parar se esfriar demais
@@ -77,6 +85,7 @@ class Alocador:
         self._score_total = melhor_score_total
         self._score_vertical = melhor_score_vertical
         self._score_horizontal = melhor_score_horizontal
+        self._score_distribuicao = melhor_score_distribuicao
         self._tempo_execucao = time.time() - inicio
 
         self._solucao = self._solucao.applymap(lambda v: self._funcional.pessoas[v]['nome'])
@@ -224,7 +233,28 @@ class Alocador:
     def _quantificar_erro_distribuicao_geral(self, df):
         qtd_alocacoes_por_pessoa = pd.Series(df.values.flatten()).value_counts()
         return np.var(qtd_alocacoes_por_pessoa)
-  
+    
+    def _contar_extras_por_pessoa(self):
+        counts = {p: 0 for p in self._funcional.pessoas.keys()}
+        for dt, assignments in self._extra.datas.items():
+            for assignment in assignments:
+                pessoa = assignment['pessoa']
+                if pessoa in counts:
+                    counts[pessoa] += 1
+        return counts
+
+    def _quantificar_variancia_distribuicao(self, df, extra_counts):
+        # Count occurrences in the current solution
+        solution_counts = pd.Series(df.values.flatten()).value_counts()
+        
+        # Combine with extra counts
+        total_counts = []
+        for pessoa in self._funcional.pessoas.keys():
+            count = solution_counts.get(pessoa, 0) + extra_counts.get(pessoa, 0)
+            total_counts.append(count)
+            
+        return np.var(total_counts)
+
     @property
     def solucao(self):
         return self._solucao
@@ -240,6 +270,10 @@ class Alocador:
     @property
     def score_horizontal(self):
         return self._score_horizontal
+
+    @property
+    def score_distribuicao(self):
+        return self._score_distribuicao
     
     @property
     def tempo_execucao(self):
