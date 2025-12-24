@@ -9,10 +9,10 @@ import math
 
 class Alocador:
 
-    def __init__(self, funcional, agenda, extra):
+    def __init__(self, funcional, agenda, designacoes_predefinidas):
         self._funcional = funcional
         self._agenda = agenda
-        self._extra = extra
+        self._designacoes_predefinidas = designacoes_predefinidas
         self._solucao = None
         self._score_total = None
         self._score_vertical = None
@@ -23,8 +23,8 @@ class Alocador:
     def executar(self, num_passos=10000, peso_vertical=1.0, peso_horizontal=1.0, peso_distribuicao=1.0, temp_inicial=100.0, resfriamento=0.995):
         inicio = time.time()
         
-        # Pre-calcula contagem de extras
-        extra_counts = self._contar_extras_por_pessoa()
+        # Pre-calcula contagem de designacoes predefinidas
+        designacoes_predefinidas_counts = self._contar_designacoes_predefinidas_por_pessoa()
 
         # Solução inicial
         atual_solucao = self._alocar()
@@ -32,7 +32,7 @@ class Alocador:
         # Scores iniciais
         score_v = self._quantificar_variancia_vertical(atual_solucao)
         score_h = self._quantificar_variancia_horizontal(atual_solucao)
-        score_d = self._quantificar_variancia_distribuicao(atual_solucao, extra_counts)
+        score_d = self._quantificar_variancia_distribuicao(atual_solucao, designacoes_predefinidas_counts)
         atual_score = (score_v * peso_vertical) + (score_h * peso_horizontal) + (score_d * peso_distribuicao)
         
         melhor_solucao = atual_solucao.copy()
@@ -48,7 +48,7 @@ class Alocador:
             
             score_v_viz = self._quantificar_variancia_vertical(vizinho)
             score_h_viz = self._quantificar_variancia_horizontal(vizinho)
-            score_d_viz = self._quantificar_variancia_distribuicao(vizinho, extra_counts)
+            score_d_viz = self._quantificar_variancia_distribuicao(vizinho, designacoes_predefinidas_counts)
             vizinho_score = (score_v_viz * peso_vertical) + (score_h_viz * peso_horizontal) + (score_d_viz * peso_distribuicao)
             
             delta = vizinho_score - atual_score
@@ -182,7 +182,7 @@ class Alocador:
         return pessoa in df.loc[dt].values
     
     def _pessoa_estah_impedida_para_a_funcao_na_data(self, pessoa, funcao, dt):
-        for x in self._extra.datas[dt]:
+        for x in self._designacoes_predefinidas.datas[dt]:
             if (
                 x['parte'] in self._funcional.colisoes_proibidas.keys() 
                 and funcao in self._funcional.colisoes_proibidas[x['parte']] 
@@ -234,23 +234,23 @@ class Alocador:
         qtd_alocacoes_por_pessoa = pd.Series(df.values.flatten()).value_counts()
         return np.var(qtd_alocacoes_por_pessoa)
     
-    def _contar_extras_por_pessoa(self):
+    def _contar_designacoes_predefinidas_por_pessoa(self):
         counts = {p: 0 for p in self._funcional.pessoas.keys()}
-        for dt, assignments in self._extra.datas.items():
+        for dt, assignments in self._designacoes_predefinidas.datas.items():
             for assignment in assignments:
                 pessoa = assignment['pessoa']
                 if pessoa in counts:
                     counts[pessoa] += 1
         return counts
 
-    def _quantificar_variancia_distribuicao(self, df, extra_counts):
+    def _quantificar_variancia_distribuicao(self, df, designacoes_predefinidas_counts):
         # Count occurrences in the current solution
         solution_counts = pd.Series(df.values.flatten()).value_counts()
         
-        # Combine with extra counts
+        # Combine with designacoes_predefinidas counts
         total_counts = []
         for pessoa in self._funcional.pessoas.keys():
-            count = solution_counts.get(pessoa, 0) + extra_counts.get(pessoa, 0)
+            count = solution_counts.get(pessoa, 0) + designacoes_predefinidas_counts.get(pessoa, 0)
             total_counts.append(count)
             
         return np.var(total_counts)

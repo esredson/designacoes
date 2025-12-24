@@ -3,14 +3,14 @@ import util
 
 from funcional import Funcional
 from agenda import Agenda
-from extra import Extra
+from designacoes_predefinidas import DesignacoesPredefinidas
 from alocador import Alocador
 
 funcional = Funcional(util.config('funcional'))
 agenda = Agenda(util.config('agenda'))
-extra = Extra(util.config('extra'), funcional, agenda)
+designacoes_predefinidas = DesignacoesPredefinidas(util.config('designacoes_predefinidas'), funcional, agenda)
 
-csp = Alocador(funcional, agenda, extra)
+csp = Alocador(funcional, agenda, designacoes_predefinidas)
 csp.executar(num_passos=10000)
  
 print(csp.solucao)
