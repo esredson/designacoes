@@ -2,6 +2,7 @@ import pandas as pd
 import random
 import time
 import util
+import numpy as np
 
 #from tqdm import tqdm
 
@@ -15,21 +16,30 @@ class Alocador:
         self._error_score = None
         self._tempo_execucao = None
 
-    def executar(self, num_passos=1000):
+    def executar(self, num_passos=1000, peso_geral=1.0, peso_por_funcao=1.0):
         melhor_solucao = None
-        melhor_error_score = 999
+        melhor_score_total = float('inf')
+        melhor_error_score_geral = float('inf')
+        melhor_error_score_por_funcao = float('inf')
 
         inicio = time.time()
         
         for _ in range(num_passos):
-            solucao = self._alocar();
-            score = self._quantificar_erro_distribuicao_por_funcao(solucao)
-            if melhor_solucao is None or score < melhor_error_score:
+            solucao = self._alocar()
+            error_score_geral = self._quantificar_erro_distribuicao_geral(solucao)
+            error_score_por_funcao = self._quantificar_erro_distribuicao_por_funcao(solucao)
+            
+            score_total = (error_score_geral * peso_geral) + (error_score_por_funcao * peso_por_funcao)
+
+            if melhor_solucao is None or score_total < melhor_score_total:
                 melhor_solucao = solucao
-                melhor_error_score = score
+                melhor_score_total = score_total
+                melhor_error_score_geral = error_score_geral
+                melhor_error_score_por_funcao = error_score_por_funcao
 
         self._solucao = melhor_solucao
-        self._error_score = melhor_error_score
+        self._error_score_geral = melhor_error_score_geral
+        self._error_score_por_funcao = melhor_error_score_por_funcao
         self._tempo_execucao = time.time() - inicio
 
         self._solucao = self._solucao.applymap(lambda v: self._funcional.pessoas[v]['nome'])
@@ -86,6 +96,10 @@ class Alocador:
         for funcao, pessoas_alocadas in df.items():
             erro += util.quantificar_erro_distribuicao(pessoas_alocadas.values, self._funcional.funcoes[funcao]['pessoas'])
         return erro
+
+    def _quantificar_erro_distribuicao_geral(self, df):
+        qtd_alocacoes_por_pessoa = pd.Series(df.values.flatten()).value_counts()
+        return np.var(qtd_alocacoes_por_pessoa)
   
     @property
     def solucao(self):
