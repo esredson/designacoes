@@ -3,6 +3,7 @@ import random
 import time
 import util
 import numpy as np
+import math
 
 #from tqdm import tqdm
 
@@ -18,28 +19,59 @@ class Alocador:
         self._score_horizontal = None
         self._tempo_execucao = None
 
-    def executar(self, num_passos=1000, peso_vertical=1.0, peso_horizontal=1.0):
-        melhor_solucao = None
-        melhor_score_total = float('inf')
-        melhor_score_vertical = float('inf')
-        melhor_score_horizontal = float('inf')
-
+    def executar(self, num_passos=10000, peso_vertical=1.0, peso_horizontal=1.0, temp_inicial=100.0, resfriamento=0.995):
         inicio = time.time()
         
+        # Solução inicial
+        atual_solucao = self._alocar()
+        
+        # Scores iniciais
+        score_v = self._quantificar_variancia_vertical(atual_solucao)
+        score_h = self._quantificar_variancia_horizontal(atual_solucao)
+        atual_score = (score_v * peso_vertical) + (score_h * peso_horizontal)
+        
+        melhor_solucao = atual_solucao.copy()
+        melhor_score_total = atual_score
+        melhor_score_vertical = score_v
+        melhor_score_horizontal = score_h
+        
+        temp = temp_inicial
+        
         for _ in range(num_passos):
-            solucao = self._alocar()
+            vizinho = self._gerar_vizinho(atual_solucao)
             
-            # Scores (quanto menor, melhor)
-            score_vertical = self._quantificar_variancia_vertical(solucao)
-            score_horizontal = self._quantificar_variancia_horizontal(solucao)
+            score_v_viz = self._quantificar_variancia_vertical(vizinho)
+            score_h_viz = self._quantificar_variancia_horizontal(vizinho)
+            vizinho_score = (score_v_viz * peso_vertical) + (score_h_viz * peso_horizontal)
             
-            score_total = (score_vertical * peso_vertical) + (score_horizontal * peso_horizontal)
-
-            if melhor_solucao is None or score_total < melhor_score_total:
-                melhor_solucao = solucao
-                melhor_score_total = score_total
-                melhor_score_vertical = score_vertical
-                melhor_score_horizontal = score_horizontal
+            delta = vizinho_score - atual_score
+            
+            # Critério de aceitação do Simulated Annealing
+            aceitar = False
+            if delta < 0:
+                aceitar = True
+            else:
+                try:
+                    probabilidade = math.exp(-delta / temp)
+                except OverflowError:
+                    probabilidade = 0
+                if random.random() < probabilidade:
+                    aceitar = True
+            
+            if aceitar:
+                atual_solucao = vizinho
+                atual_score = vizinho_score
+                
+                # Atualiza o melhor global encontrado
+                if atual_score < melhor_score_total:
+                    melhor_solucao = atual_solucao.copy()
+                    melhor_score_total = atual_score
+                    melhor_score_vertical = score_v_viz
+                    melhor_score_horizontal = score_h_viz
+            
+            temp *= resfriamento
+            if temp < 0.0001: # Otimização: parar se esfriar demais
+                 break
 
         self._solucao = melhor_solucao
         self._score_total = melhor_score_total
@@ -48,6 +80,59 @@ class Alocador:
         self._tempo_execucao = time.time() - inicio
 
         self._solucao = self._solucao.applymap(lambda v: self._funcional.pessoas[v]['nome'])
+
+    def _gerar_vizinho(self, solucao):
+        nova_solucao = solucao.copy()
+        datas = self._agenda.datas_validas
+        funcoes = list(self._funcional.funcoes.keys())
+        
+        # Tenta encontrar uma troca válida (limite de tentativas para não travar)
+        for _ in range(20):
+            dt = random.choice(datas)
+            funcao1 = random.choice(funcoes)
+            
+            pessoa1 = nova_solucao.at[dt, funcao1]
+            
+            # Candidato a troca: qualquer pessoa que saiba fazer a função
+            candidatos = self._funcional.funcoes[funcao1]['pessoas']
+            pessoa2 = random.choice(candidatos)
+            
+            if pessoa1 == pessoa2:
+                continue
+                
+            # Verifica se pessoa2 já está alocada neste dia em outra função
+            funcao2 = None
+            for f in funcoes:
+                if f != funcao1 and nova_solucao.at[dt, f] == pessoa2:
+                    funcao2 = f
+                    break
+            
+            if funcao2:
+                # Caso de Troca (Swap)
+                # Verifica se pessoa1 sabe fazer a funcao2
+                if pessoa1 not in self._funcional.funcoes[funcao2]['pessoas']:
+                    continue
+                
+                # Verifica impedimentos (hard constraints)
+                if (self._pessoa_estah_impedida_para_a_funcao_na_data(pessoa2, funcao1, dt) or
+                    self._pessoa_estah_impedida_para_a_funcao_na_data(pessoa1, funcao2, dt)):
+                    continue
+                
+                # Realiza a troca
+                nova_solucao.at[dt, funcao1] = pessoa2
+                nova_solucao.at[dt, funcao2] = pessoa1
+                return nova_solucao
+                
+            else:
+                # Caso de Substituição (pessoa2 está livre no dia)
+                # Verifica impedimentos
+                if self._pessoa_estah_impedida_para_a_funcao_na_data(pessoa2, funcao1, dt):
+                    continue
+                    
+                nova_solucao.at[dt, funcao1] = pessoa2
+                return nova_solucao
+                
+        return nova_solucao
 
     def _alocar(self):
         df = pd.DataFrame(
