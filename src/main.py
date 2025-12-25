@@ -19,7 +19,7 @@ print(alocador.score_total)
 print(alocador.score_vertical)
 print(alocador.score_horizontal)
 print(alocador.score_distribuicao)
-print(alocador.tempo_execucao)
+print(f"Tempo de execução: {alocador.tempo_execucao:.2f} segundos")
 
 filename = f'designacoes-{util.obter_nome_mes(util.obter_mes_ano_referencia()[0])}-{util.obter_mes_ano_referencia()[1]}.csv'
 filepath = os.path.join('output', filename)
