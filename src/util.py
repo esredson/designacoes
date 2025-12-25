@@ -50,4 +50,8 @@ def remover_primeira_ocorrencia(item, lista):
     index_to_remove = lista.index(item)
     return lista[:index_to_remove] + lista[index_to_remove + 1:]
 
+def obter_nome_dia_semana(dt):
+    dias = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
+    return dias[dt.weekday()]
+
 

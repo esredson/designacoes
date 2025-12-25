@@ -11,6 +11,7 @@ pandas = "^2.0.2"
 matplotlib = "^3.7.1"
 python-constraint = "^1.4.0"
 pytest = "^7.3.2"
+reportlab = "^4.4.7"
 
 [build-system]
 requires = ["poetry-core"]
