@@ -88,7 +88,8 @@ class Alocador:
         self._score_distribuicao = melhor_score_distribuicao
         self._tempo_execucao = time.time() - inicio
 
-        self._solucao = self._solucao.applymap(lambda v: self._funcional.pessoas[v]['nome'])
+        self._solucao.replace({k: v['nome'] for k, v in self._funcional.pessoas.items()}, inplace=True)
+        self._solucao.rename(columns={k: v['nome'] for k, v in self._funcional.funcoes.items()}, inplace=True)
 
     def _gerar_vizinho(self, solucao):
         nova_solucao = solucao.copy()
