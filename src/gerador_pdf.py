@@ -85,10 +85,18 @@ class GeradorPDF:
                                     fontName='Helvetica-Bold', fontSize=13, 
                                     alignment=TA_CENTER, leading=13, textColor=colors.HexColor('#666666'))
         
+        # Células mescladas (itálico): cor da fonte #666666, tamanho 13
+        estilo_celula_italico = ParagraphStyle('CellItalic', parent=estilos['Normal'], 
+                                    fontName='Helvetica-BoldOblique', fontSize=13, 
+                                    alignment=TA_CENTER, leading=13, textColor=colors.HexColor('#666666'))
+
         # Células de data: cor da fonte branca, tamanho 15 (dia/mês), 8 (dia da semana)
         estilo_celula_data = ParagraphStyle('DateCell', parent=estilos['Normal'], 
                                          fontName='Helvetica-Bold', fontSize=15, 
                                          alignment=TA_RIGHT, leading=13, textColor=colors.white)
+
+        # Lista para armazenar comandos de estilo dinâmicos (mesclagens)
+        comandos_estilo_dinamicos = []
 
         for index, linha in dataframe.iterrows():
             dt = pd.to_datetime(index)
@@ -98,8 +106,56 @@ class GeradorPDF:
             # Conteúdo da célula de data
             texto_data = f"{dia_mes}<br/><font size=8>{dia_semana}</font>"
             
-            dados_linha = [Paragraph(texto_data, estilo_celula_data)] + \
-                       [Paragraph(str(val) if pd.notna(val) else "-", estilo_celula) for val in linha]
+            dados_linha = [Paragraph(texto_data, estilo_celula_data)]
+            
+            # Lógica de mesclagem de células vazias
+            valores_linha = linha.values
+            spans = []
+            if len(valores_linha) > 0:
+                inicio_span = 0
+                valor_atual = valores_linha[0]
+                
+                for i in range(1, len(valores_linha)):
+                    val = valores_linha[i]
+                    # Verifica se é vazio (NaN ou string vazia)
+                    if pd.isna(val) or str(val).strip() == "":
+                        # Continua o span
+                        pass
+                    else:
+                        # Finaliza o span anterior
+                        spans.append({'inicio': inicio_span, 'fim': i-1, 'valor': valor_atual})
+                        inicio_span = i
+                        valor_atual = val
+                # Adiciona o último span
+                spans.append({'inicio': inicio_span, 'fim': len(valores_linha)-1, 'valor': valor_atual})
+            
+            # Índice da linha atual na tabela (cabeçalho é 0, primeira linha de dados é 1)
+            indice_linha_pdf = len(dados)
+
+            for span in spans:
+                valor = span['valor']
+                inicio = span['inicio'] # índice 0-based no dataframe
+                fim = span['fim']
+                
+                eh_merge = (fim > inicio)
+                estilo = estilo_celula_italico if eh_merge else estilo_celula
+                
+                texto_celula = str(valor) if pd.notna(valor) and str(valor).strip() != "" else "-"
+                
+                # Adiciona a primeira célula do span com conteúdo
+                dados_linha.append(Paragraph(texto_celula, estilo))
+                
+                # Adiciona células vazias para o resto do span (placeholders)
+                for _ in range(inicio + 1, fim + 1):
+                    dados_linha.append("") 
+                
+                # Adiciona comando SPAN se necessário
+                if eh_merge:
+                    # Colunas no PDF: Data é 0. Colunas de dados começam em 1.
+                    col_start = inicio + 1
+                    col_end = fim + 1
+                    comandos_estilo_dinamicos.append(('SPAN', (col_start, indice_linha_pdf), (col_end, indice_linha_pdf)))
+
             dados.append(dados_linha)
 
         # Larguras das Colunas
@@ -120,7 +176,7 @@ class GeradorPDF:
         fundo_linha_escuro = colors.HexColor('#ebebeb')
         cor_grade = colors.white 
 
-        estilo_tabela = TableStyle([
+        comandos_estilo_base = [
             # Cabeçalho
             ('BACKGROUND', (0,0), (-1,0), fundo_cabecalho),
             ('TEXTCOLOR', (0,0), (-1,0), colors.white),
@@ -144,7 +200,9 @@ class GeradorPDF:
             ('ALIGN', (0,1), (-1,-1), 'CENTER'),
             ('TOPPADDING', (0,1), (-1,-1), 6),
             ('BOTTOMPADDING', (0,1), (-1,-1), 6),
-        ])
+        ]
+        
+        estilo_tabela = TableStyle(comandos_estilo_base + comandos_estilo_dinamicos)
         
         # Cores alternadas para linhas de dados (1 até o fim)
         for i in range(1, len(dados)):

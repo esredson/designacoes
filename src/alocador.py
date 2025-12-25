@@ -88,6 +88,21 @@ class Alocador:
         self._score_distribuicao = melhor_score_distribuicao
         self._tempo_execucao = time.time() - inicio
 
+        # Inserir cancelamentos
+        cancelamentos = self._agenda.cancelamentos
+        if cancelamentos:
+            cols = self._solucao.columns
+            for dt, descricao in cancelamentos.items():
+                # Cria uma linha com NaNs
+                row = pd.Series(index=cols, dtype=object)
+                # Define a primeira coluna com a descrição
+                row.iloc[0] = descricao
+                # Adiciona à solução
+                self._solucao.loc[dt] = row
+            
+            # Ordena por data
+            self._solucao.sort_index(inplace=True)
+
         self._solucao.replace({k: v['nome'] for k, v in self._funcional.pessoas.items()}, inplace=True)
         self._solucao.rename(columns={k: v['nome'] for k, v in self._funcional.funcoes.items()}, inplace=True)
 
