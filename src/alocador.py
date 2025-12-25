@@ -184,8 +184,8 @@ class Alocador:
     def _pessoa_estah_impedida_para_a_funcao_na_data(self, pessoa, funcao, dt):
         for x in self._designacoes_predefinidas.datas[dt]:
             if (
-                x['parte'] in self._funcional.colisoes_proibidas.keys() 
-                and funcao in self._funcional.colisoes_proibidas[x['parte']] 
+                x['tipo'] in self._funcional.colisoes_proibidas.keys() 
+                and funcao in self._funcional.colisoes_proibidas[x['tipo']] 
                 and x['pessoa'] == pessoa
             ):
                 return True
@@ -239,6 +239,11 @@ class Alocador:
         for dt, assignments in self._designacoes_predefinidas.datas.items():
             for assignment in assignments:
                 pessoa = assignment['pessoa']
+                tipo = assignment['tipo']
+                
+                if self._funcional.tipos_designacoes_predefinidas[tipo].get('desconsiderar_ao_contar_designacoes'):
+                    continue
+
                 if pessoa in counts:
                     counts[pessoa] += 1
         return counts

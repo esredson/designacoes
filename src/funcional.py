@@ -1,10 +1,9 @@
-
 class Funcional:
 
     def __init__(self, config):
         self._pessoas = config['pessoas']
         self._gerar_funcoes(config['funcoes']) 
-        self._partes = config['partes']
+        self._tipos_designacoes_predefinidas = config['tipos_designacoes_predefinidas']
         self._gerar_colisoes_proibidas(config['colisoes_proibidas'])       
 
     def _gerar_funcoes(self, config):
@@ -15,10 +14,10 @@ class Funcional:
 
     def _gerar_colisoes_proibidas(self, config):
         colisoes_proibidas = []
-        for parte in config.keys():
-            assert parte in self._partes.keys(), f"Parte {parte} na colisão inválida"
-            for funcao in config[parte]:
-                assert funcao in self._funcoes.keys(), f"Função {funcao} na colisão {parte} inválida"
+        for tipo_designacao_predefinida in config.keys():
+            assert tipo_designacao_predefinida in self._tipos_designacoes_predefinidas.keys(), f"Designação predefinida {tipo_designacao_predefinida} na colisão inválida"
+            for funcao in config[tipo_designacao_predefinida]:
+                assert funcao in self._funcoes.keys(), f"Função {funcao} na colisão {tipo_designacao_predefinida} inválida"
         self._colisoes_proibidas = config
 
     @property
@@ -32,3 +31,7 @@ class Funcional:
     @property
     def colisoes_proibidas(self):
         return self._colisoes_proibidas
+
+    @property
+    def tipos_designacoes_predefinidas(self):
+        return self._tipos_designacoes_predefinidas
