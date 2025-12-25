@@ -223,16 +223,6 @@ class Alocador:
             variancias.append(np.var(counts))
             
         return np.mean(variancias) if variancias else 0
-            
-    def _quantificar_erro_distribuicao_por_funcao(self, df):
-        erro = 0
-        for funcao, pessoas_alocadas in df.items():
-            erro += util.quantificar_erro_distribuicao(pessoas_alocadas.values, self._funcional.funcoes[funcao]['pessoas'])
-        return erro
-
-    def _quantificar_erro_distribuicao_geral(self, df):
-        qtd_alocacoes_por_pessoa = pd.Series(df.values.flatten()).value_counts()
-        return np.var(qtd_alocacoes_por_pessoa)
     
     def _contar_designacoes_predefinidas_por_pessoa(self):
         counts = {p: 0 for p in self._funcional.pessoas.keys()}
