@@ -23,7 +23,7 @@ df_solucao = None
 
 if os.path.exists(caminho_arquivo_csv):
     print(f"Arquivo {caminho_arquivo_csv} já existe. Pulando alocação e carregando dados.")
-    df_solucao = pd.read_csv(caminho_arquivo_csv, index_col=0)
+    df_solucao = pd.read_csv(caminho_arquivo_csv, index_col=0, header=[0, 1])
 else:
     alocador = Alocador(funcional, agenda, designacoes_predefinidas)
 

@@ -4,14 +4,26 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 import pandas as pd
 import util
+import os
 
 class GeradorPDF:
     def __init__(self, configuracoes_gerais, mes, ano):
         self._config = configuracoes_gerais
         self._mes = mes
         self._ano = ano
+        
+        # Tenta registrar fonte de Emoji (Windows)
+        try:
+            pdfmetrics.registerFont(TTFont('EmojiFont', 'C:\\Windows\\Fonts\\seguiemj.ttf'))
+        except:
+            try:
+                pdfmetrics.registerFont(TTFont('EmojiFont', 'C:\\Windows\\Fonts\\seguisym.ttf'))
+            except:
+                pass # Falha silenciosa, usará fonte padrão se não encontrar
 
     def gerar(self, dataframe, caminho_arquivo):
         # Margens
@@ -74,9 +86,25 @@ class GeradorPDF:
                                            textColor=colors.white, alignment=TA_CENTER,
                                            leading=13)
         
-        # Garante que as colunas sejam strings
-        cabecalhos = [Paragraph('', estilo_paragrafo_cabecalho)] + \
-                  [Paragraph(str(col), estilo_paragrafo_cabecalho) for col in dataframe.columns]
+        # Garante que as colunas sejam strings e processa ícones se houver MultiIndex
+        cabecalhos = [Paragraph('', estilo_paragrafo_cabecalho)]
+        
+        for col in dataframe.columns:
+            if isinstance(col, tuple):
+                icone, nome = col
+                # Usa EmojiFont se estiver registrada, senão usa Helvetica (pode não mostrar emoji corretamente)
+                nome_fonte_icone = 'EmojiFont' if 'EmojiFont' in pdfmetrics.getRegisteredFontNames() else 'Helvetica'
+                
+                # Se houver ícone, adiciona com a fonte específica
+                if icone:
+                    texto_cabecalho = f'<font name="{nome_fonte_icone}">{icone}</font> {nome}'
+                else:
+                    texto_cabecalho = str(nome)
+            else:
+                texto_cabecalho = str(col)
+            
+            cabecalhos.append(Paragraph(texto_cabecalho, estilo_paragrafo_cabecalho))
+            
         dados.append(cabecalhos)
 
         # Linhas
@@ -182,15 +210,17 @@ class GeradorPDF:
             ('TEXTCOLOR', (0,0), (-1,0), colors.white),
             ('ALIGN', (0,0), (-1,0), 'CENTER'),
             ('VALIGN', (0,0), (-1,0), 'MIDDLE'),
-            ('TOPPADDING', (0,0), (-1,0), 8),
-            ('BOTTOMPADDING', (0,0), (-1,0), 8),
+            ('TOPPADDING', (0,0), (-1,0), 12),
+            ('BOTTOMPADDING', (0,0), (-1,0), 12),
+            ('LEFTPADDING', (0,0), (-1,0), 2),
+            ('RIGHTPADDING', (0,0), (-1,0), 2),
             
             # Célula Superior Esquerda (Vazia/Branca)
             ('BACKGROUND', (0,0), (0,0), colors.white),
 
             # Fundo da Coluna de Data (Todas as linhas exceto cabeçalho)
             ('BACKGROUND', (0,1), (0,-1), fundo_data),
-            ('RIGHTPADDING', (0,1), (0,-1), 10), # Adiciona preenchimento para alinhamento à direita
+            ('RIGHTPADDING', (0,1), (0,-1), 5), # Adiciona preenchimento para alinhamento à direita
             
             # Grade
             ('GRID', (0,0), (-1,-1), 2, colors.white),

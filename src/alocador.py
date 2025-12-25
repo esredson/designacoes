@@ -104,7 +104,19 @@ class Alocador:
             self._solucao.sort_index(inplace=True)
 
         self._solucao.replace({k: v['nome'] for k, v in self._funcional.pessoas.items()}, inplace=True)
-        self._solucao.rename(columns={k: v['nome'] for k, v in self._funcional.funcoes.items()}, inplace=True)
+        
+        # Renomeia colunas para MultiIndex (Icone, Nome)
+        novas_colunas = []
+        for chave_coluna in self._solucao.columns:
+             config_funcao = self._funcional.funcoes.get(chave_coluna)
+             if config_funcao:
+                 icone = config_funcao.get('icone', '')
+                 nome = config_funcao.get('nome', chave_coluna)
+                 novas_colunas.append((icone, nome))
+             else:
+                 novas_colunas.append(('', chave_coluna))
+        
+        self._solucao.columns = pd.MultiIndex.from_tuples(novas_colunas, names=['Icone', 'Funcao'])
 
     def _gerar_vizinho(self, solucao):
         nova_solucao = solucao.copy()
