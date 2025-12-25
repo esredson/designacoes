@@ -9,6 +9,14 @@ from alocador import Alocador
 funcional = Funcional(util.config('funcional'))
 agenda = Agenda(util.config('agenda'))
 designacoes_predefinidas = DesignacoesPredefinidas(util.config('designacoes_predefinidas'), funcional, agenda)
+
+filename = f'designacoes-{util.obter_nome_mes(util.obter_mes_ano_referencia()[0])}-{util.obter_mes_ano_referencia()[1]}.csv'
+filepath = os.path.join('output', filename)
+
+if os.path.exists(filepath):
+    print(f"Arquivo {filepath} já existe. Pulando execução.")
+    exit()
+
 alocador = Alocador(funcional, agenda, designacoes_predefinidas)
 
 print("Montando as designações...")
@@ -21,7 +29,5 @@ print(alocador.score_horizontal)
 print(alocador.score_distribuicao)
 print(f"Tempo de execução: {alocador.tempo_execucao:.2f} segundos")
 
-filename = f'designacoes-{util.obter_nome_mes(util.obter_mes_ano_referencia()[0])}-{util.obter_mes_ano_referencia()[1]}.csv'
-filepath = os.path.join('output', filename)
 alocador.solucao.to_csv(filepath)
 print(f"Solução salva em {filepath}")
