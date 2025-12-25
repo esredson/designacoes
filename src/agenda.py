@@ -6,9 +6,6 @@ class Agenda:
         dias_semana = config["dias_semana"] 
         self._gerar_datas(dias_semana)
 
-        datas_extras = util.converter_strings_para_datas(config["datas_extras"])
-        self._incluir_datas_extras(datas_extras)
-
         self._gerar_cancelamentos(config["cancelamentos"])
         
     def _gerar_datas(self, dias_semana):
@@ -29,13 +26,6 @@ class Agenda:
                 datas.append(data)
 
         self._datas = datas
-
-    def _incluir_datas_extras(self, datas_extras):
-        for dt in datas_extras:
-            assert not dt in self._datas, f"Data extra {dt} já consta entre as datas programadas"
-        for dt in datas_extras:
-            self._datas.append(dt)
-        sorted(self._datas)
 
     def _gerar_cancelamentos(self, config_cancelamentos):
         cancelamentos = {}
