@@ -1,17 +1,39 @@
 import datetime, json, re
 import numpy as np
 
+def obter_mes_ano_referencia():
+    today = datetime.date.today()
+    if today.day > 26:
+        if today.month == 12:
+            return 1, today.year + 1
+        else:
+            return today.month + 1, today.year
+    else:
+        return today.month, today.year
+
+def obter_nome_mes(mes):
+    meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro']
+    return meses[mes - 1]
+
 def converter_string_para_data(str):
     match = re.match(r"^(\d{1,2})(\/\d{1,2})?(\/\d{2})?$", str)
     if match:
         dia = int(match.group(1))
+        
+        mes_ref, ano_ref = obter_mes_ano_referencia()
+
         if match.group(2):
             mes = int(match.group(2).replace('/', ''))
         else:
-            today = datetime.date.today()
-            mes = today.month + 1 if today.day > 26 else today.month
-        ano = int(match.group(3).replace('/', '')) if match.group(3) else datetime.date.today().year
-    return datetime.date(ano + 2000 if ano < 2000 else ano, mes, dia)
+            mes = mes_ref
+            
+        if match.group(3):
+             ano = int(match.group(3).replace('/', ''))
+             ano = ano + 2000 if ano < 2000 else ano
+        else:
+             ano = ano_ref
+             
+    return datetime.date(ano, mes, dia)
 
 def converter_strings_para_datas(strs):
     dts = []
