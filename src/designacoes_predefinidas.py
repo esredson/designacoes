@@ -13,8 +13,7 @@ class DesignacoesPredefinidas:
         self._gerar_datas(dados)
 
     def _carregar_dados(self, mes, ano, diretorio_dados):
-        nome_mes = util.obter_nome_mes(mes)
-        padrao_arquivo = f"designacoes-predefinidas-{nome_mes}-{ano}*.json"
+        padrao_arquivo = f"{ano}-{mes:02d}-predefinidas*.json"
         caminho_padrao = os.path.join(diretorio_dados, padrao_arquivo)
 
         arquivos_encontrados = glob.glob(caminho_padrao)

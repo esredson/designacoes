@@ -24,9 +24,8 @@ funcional = Funcional(util.config('funcional'))
 agenda = Agenda(util.config('agenda'))
 
 mes, ano = util.obter_mes_ano_referencia()
-nome_mes = util.obter_nome_mes(mes)
 
-nome_arquivo_csv = f'designacoes-{nome_mes}-{ano}.csv'
+nome_arquivo_csv = f'{ano}-{mes:02d}-designacoes.csv'
 caminho_arquivo_csv = os.path.join('data', nome_arquivo_csv)
 nome_arquivo_pdf = nome_arquivo_csv.replace('.csv', '.pdf')
 caminho_arquivo_pdf = os.path.join('data', nome_arquivo_pdf)
