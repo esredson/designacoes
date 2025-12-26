@@ -244,3 +244,42 @@ class GeradorPDF:
         elementos.append(tabela)
 
         documento.build(elementos)
+
+if __name__ == "__main__":
+    import sys
+    from configuracoes_gerais import ConfiguracoesGerais
+    
+    try:
+        # Obtém mês e ano atuais (sem argumentos de linha de comando)
+        mes, ano = util.obter_mes_ano_referencia()
+        
+        print(f"Iniciando geração de PDF para {mes}/{ano}...")
+        
+        # Carrega configurações
+        config_geral = ConfiguracoesGerais(util.config('geral'))
+        
+        # Define caminhos dos arquivos
+        nome_arquivo_csv = f'{ano}-{mes:02d}-designacoes.csv'
+        caminho_arquivo_csv = os.path.join('data', nome_arquivo_csv)
+        nome_arquivo_pdf = nome_arquivo_csv.replace('.csv', '.pdf')
+        caminho_arquivo_pdf = os.path.join('data', nome_arquivo_pdf)
+        
+        # Verifica se o CSV existe
+        if not os.path.exists(caminho_arquivo_csv):
+            print(f"Erro: Arquivo CSV não encontrado: {caminho_arquivo_csv}")
+            sys.exit(1)
+            
+        # Carrega os dados
+        print(f"Lendo dados de {caminho_arquivo_csv}...")
+        df_solucao = pd.read_csv(caminho_arquivo_csv, index_col=0, header=[0, 1])
+        
+        # Gera o PDF
+        print("Gerando arquivo PDF...")
+        gerador = GeradorPDF(config_geral, mes, ano)
+        gerador.gerar(df_solucao, caminho_arquivo_pdf)
+        
+        print(f"Sucesso! PDF salvo em {caminho_arquivo_pdf}")
+        
+    except Exception as e:
+        print(f"Erro fatal: {str(e)}")
+        sys.exit(1)
