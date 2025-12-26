@@ -1,6 +1,7 @@
 import util
 import os
 import pandas as pd
+import argparse
 
 from funcional import Funcional
 from agenda import Agenda
@@ -8,6 +9,15 @@ from designacoes_predefinidas import DesignacoesPredefinidas
 from alocador import Alocador
 from configuracoes_gerais import ConfiguracoesGerais
 from gerador_pdf import GeradorPDF
+
+# Configuração de argumentos da linha de comando
+parser = argparse.ArgumentParser(description='Gerador de Designações')
+parser.add_argument('--mes', type=int, help='Mês de referência (1-12)')
+parser.add_argument('--ano', type=int, help='Ano de referência (ex: 2025)')
+args = parser.parse_args()
+
+# Define mês e ano de referência
+util.definir_mes_ano_referencia(args.mes, args.ano)
 
 configuracoes_gerais = ConfiguracoesGerais(util.config('geral'))
 funcional = Funcional(util.config('funcional'))

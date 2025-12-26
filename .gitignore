@@ -4,3 +4,4 @@ config/config.json
 myenv/
 .venv/
 data/
+tests/__pycache__/*

@@ -1,15 +1,18 @@
 import datetime, json, re
 import numpy as np
 
+_mes_ref = None
+_ano_ref = None
+
+def definir_mes_ano_referencia(mes, ano):
+    global _mes_ref, _ano_ref
+    _mes_ref = mes
+    _ano_ref = ano
+
 def obter_mes_ano_referencia():
+    global _mes_ref, _ano_ref
     today = datetime.date.today()
-    if today.day > 26:
-        if today.month == 12:
-            return 1, today.year + 1
-        else:
-            return today.month + 1, today.year
-    else:
-        return today.month, today.year
+    return _mes_ref if _mes_ref else today.month, _ano_ref if _ano_ref else today.year
 
 def obter_nome_mes(mes):
     meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro']

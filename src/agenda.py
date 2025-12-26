@@ -11,8 +11,7 @@ class Agenda:
     def _gerar_datas(self, dias_semana):
         locale.setlocale(locale.LC_TIME, 'pt_PT.UTF-8')
 
-        ano = datetime.date.today().year
-        mes = datetime.date.today().month
+        mes, ano = util.obter_mes_ano_referencia()
 
         datas = []
 
