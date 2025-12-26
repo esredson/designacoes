@@ -103,7 +103,8 @@ class Alocador:
             # Ordena por data
             self._solucao.sort_index(inplace=True)
 
-        self._solucao.replace({k: v['nome'] for k, v in self._funcional.pessoas.items()}, inplace=True)
+        # Substitui IDs pelos Primeiros Nomes (para o CSV/PDF)
+        self._solucao.replace({k: v['nome'].split()[0] for k, v in self._funcional.pessoas.items()}, inplace=True)
         
         # Renomeia colunas para MultiIndex (Icone, Nome)
         novas_colunas = []

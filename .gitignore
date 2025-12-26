@@ -5,3 +5,4 @@ myenv/
 .venv/
 data/
 tests/__pycache__/*
+debug/

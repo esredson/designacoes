@@ -19,7 +19,7 @@ def obter_nome_mes(mes):
     return meses[mes - 1]
 
 def converter_string_para_data(str):
-    match = re.match(r"^(\d{1,2})(\/\d{1,2})?(\/\d{2})?$", str)
+    match = re.match(r"^(\d{1,2})(\/\d{1,2})?(\/\d{2,4})?$", str)
     if match:
         dia = int(match.group(1))
         
@@ -32,11 +32,15 @@ def converter_string_para_data(str):
             
         if match.group(3):
              ano = int(match.group(3).replace('/', ''))
-             ano = ano + 2000 if ano < 2000 else ano
+             # Se for 2 digitos (ex: 25), soma 2000. Se for 4 (ex: 2025), usa direto.
+             if ano < 100:
+                 ano = ano + 2000
         else:
              ano = ano_ref
              
-    return datetime.date(ano, mes, dia)
+        return datetime.date(ano, mes, dia)
+    else:
+        raise ValueError(f"Formato de data inválido: {str}")
 
 def converter_strings_para_datas(strs):
     dts = []
