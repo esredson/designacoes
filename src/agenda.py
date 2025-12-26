@@ -31,7 +31,8 @@ class Agenda:
         for str in config_cancelamentos.keys():
             cancelamentos[util.converter_string_para_data(str)] = config_cancelamentos[str]
         for dt in cancelamentos.keys():
-            assert dt in self._datas, f"Data cancelada {dt} não está entre as programadas"
+            if dt not in self._datas:
+                print(f"Data cancelada {dt} não está entre as programadas")
         self._cancelamentos = cancelamentos
 
     @property

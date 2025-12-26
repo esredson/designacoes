@@ -42,7 +42,8 @@ class DesignacoesPredefinidas:
         for str in config.keys():
             datas[util.converter_string_para_data(str)] = config[str]
         for dt in datas.keys():
-            assert dt in self._agenda.datas, f"Data predefinida {dt} não está entre as programadas"
+            if dt not in self._agenda.datas:
+                print(f"Data predefinida {dt} não está entre as programadas")
         self._datas = datas
        
     @property
