@@ -3,4 +3,4 @@ config/config.json
 .vscode/
 myenv/
 .venv/
-output/
+data/

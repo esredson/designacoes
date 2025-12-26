@@ -12,12 +12,14 @@ from gerador_pdf import GeradorPDF
 configuracoes_gerais = ConfiguracoesGerais(util.config('geral'))
 funcional = Funcional(util.config('funcional'))
 agenda = Agenda(util.config('agenda'))
-designacoes_predefinidas = DesignacoesPredefinidas(util.config('designacoes_predefinidas'), funcional, agenda)
 
-nome_arquivo_csv = f'designacoes-{util.obter_nome_mes(util.obter_mes_ano_referencia()[0])}-{util.obter_mes_ano_referencia()[1]}.csv'
-caminho_arquivo_csv = os.path.join('output', nome_arquivo_csv)
+mes, ano = util.obter_mes_ano_referencia()
+nome_mes = util.obter_nome_mes(mes)
+
+nome_arquivo_csv = f'designacoes-{nome_mes}-{ano}.csv'
+caminho_arquivo_csv = os.path.join('data', nome_arquivo_csv)
 nome_arquivo_pdf = nome_arquivo_csv.replace('.csv', '.pdf')
-caminho_arquivo_pdf = os.path.join('output', nome_arquivo_pdf)
+caminho_arquivo_pdf = os.path.join('data', nome_arquivo_pdf)
 
 df_solucao = None
 
@@ -25,6 +27,7 @@ if os.path.exists(caminho_arquivo_csv):
     print(f"Arquivo {caminho_arquivo_csv} já existe. Pulando alocação e carregando dados.")
     df_solucao = pd.read_csv(caminho_arquivo_csv, index_col=0, header=[0, 1])
 else:
+    designacoes_predefinidas = DesignacoesPredefinidas(mes, ano, funcional, agenda)
     alocador = Alocador(funcional, agenda, designacoes_predefinidas)
 
     print("Montando as designações...")
@@ -42,7 +45,6 @@ else:
     print(f"Solução salva em {caminho_arquivo_csv}")
 
 print("Gerando PDF...")
-mes, ano = util.obter_mes_ano_referencia()
 gerador = GeradorPDF(configuracoes_gerais, mes, ano)
 gerador.gerar(df_solucao, caminho_arquivo_pdf)
 print(f"PDF salvo em {caminho_arquivo_pdf}")
