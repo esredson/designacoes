@@ -3,37 +3,33 @@ import pandas as pd
 import numpy as np
 import sys
 import os
+import datetime
 from unittest.mock import MagicMock
 
 # Adiciona src ao path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
-from src.alocador import Alocador
+from alocador import Alocador
 
 class TestAlocador(unittest.TestCase):
 
     def setUp(self):
         # Dependências simuladas (Mock)
-        self.mock_funcional = MagicMock()
-        self.mock_agenda = MagicMock()
-        self.mock_designacoes_predefinidas = MagicMock()
+        self.mock_config = MagicMock()
+        self.mock_config.debug = False
 
         # Configuração básica do mock funcional
-        self.mock_funcional.pessoas = {
+        self.mock_config.pessoas = {
             'pessoa1': {'nome': 'Pessoa 1'},
             'pessoa2': {'nome': 'Pessoa 2'}
         }
-        self.mock_funcional.funcoes = {
+        self.mock_config.funcoes = {
             'funcao1': {'nome': 'Funcao 1', 'pessoas': ['pessoa1', 'pessoa2']},
             'funcao2': {'nome': 'Funcao 2', 'pessoas': ['pessoa1', 'pessoa2']}
         }
         
         # Inicializa o Alocador com mocks
-        self.alocador = Alocador(
-            self.mock_funcional, 
-            self.mock_agenda, 
-            self.mock_designacoes_predefinidas
-        )
+        self.alocador = Alocador(self.mock_config)
 
     def test_quantificar_variancia_vertical(self):
         # Cenário: 
@@ -139,6 +135,150 @@ class TestAlocador(unittest.TestCase):
         
         score = self.alocador._quantificar_variancia_distribuicao(df, predefined_counts)
         self.assertAlmostEqual(score, 0.0)
+
+    def test_colisao_proibida_respeitada(self):
+        # Configuração do cenário
+        dt = datetime.date(2025, 12, 1)
+        pessoa = 'pessoa_teste'
+        funcao_proibida = 'funcao_proibida'
+        funcao_permitida = 'funcao_permitida'
+        tipo_predefinido = 'tipo_predefinido_conflitante'
+
+        # 1. Configurar colisoes_proibidas
+        # Se a pessoa tiver 'tipo_predefinido_conflitante', ela não pode fazer 'funcao_proibida'
+        self.mock_config.colisoes_proibidas = {
+            tipo_predefinido: [funcao_proibida]
+        }
+
+        # 2. Configurar designacoes_predefinidas
+        # A pessoa tem esse tipo predefinido na data
+        self.mock_config.designacoes_predefinidas = {
+            dt: [{'tipo': tipo_predefinido, 'pessoa': pessoa}]
+        }
+
+        # Teste 1: Verificar se a função proibida é detectada como impedida
+        impedida = self.alocador._pessoa_estah_impedida_para_a_funcao_na_data(
+            pessoa, funcao_proibida, dt
+        )
+        self.assertTrue(impedida, "A pessoa deveria estar impedida para a função proibida")
+
+        # Teste 2: Verificar se uma função não listada nas colisões é permitida
+        impedida_permitida = self.alocador._pessoa_estah_impedida_para_a_funcao_na_data(
+            pessoa, funcao_permitida, dt
+        )
+        self.assertFalse(impedida_permitida, "A pessoa NÃO deveria estar impedida para a função permitida")
+
+    def test_sem_designacao_predefinida(self):
+        # Cenário onde não há designação predefinida na data
+        dt = datetime.date(2025, 12, 2)
+        pessoa = 'pessoa_teste'
+        funcao = 'qualquer_funcao'
+        
+        self.mock_config.designacoes_predefinidas = {} # Vazio
+        self.mock_config.colisoes_proibidas = {'algum_tipo': ['qualquer_funcao']}
+
+        impedida = self.alocador._pessoa_estah_impedida_para_a_funcao_na_data(
+            pessoa, funcao, dt
+        )
+        self.assertFalse(impedida, "Sem designação predefinida, não deve haver impedimento")
+
+    def test_designacao_predefinida_sem_conflito_configurado(self):
+        # Cenário onde há designação predefinida, mas o tipo não está em colisoes_proibidas
+        dt = datetime.date(2025, 12, 3)
+        pessoa = 'pessoa_teste'
+        funcao = 'funcao_x'
+        tipo_predefinido = 'tipo_seguro'
+
+        self.mock_config.colisoes_proibidas = {
+            'outro_tipo': ['funcao_x']
+        }
+        self.mock_config.designacoes_predefinidas = {
+            dt: [{'tipo': tipo_predefinido, 'pessoa': pessoa}]
+        }
+
+        impedida = self.alocador._pessoa_estah_impedida_para_a_funcao_na_data(
+            pessoa, funcao, dt
+        )
+        self.assertFalse(impedida, "Tipo predefinido não listado em colisões não deve gerar impedimento")
+
+    def test_alocacao_multipla_no_mesmo_dia(self):
+        # Cenário 1: Pessoa já alocada dinamicamente no mesmo dia -> Deve ser impedida
+        dt = datetime.date(2025, 12, 1)
+        pessoa = 'pessoa1'
+        
+        # Simula que pessoa1 já foi escolhida para 'funcao1' neste dia
+        df = pd.DataFrame(index=[dt], columns=['funcao1', 'funcao2'])
+        df.at[dt, 'funcao1'] = pessoa
+        
+        # Tenta verificar disponibilidade para 'funcao2'
+        # _obter_proxima_pessoa_da_fila deve pular pessoa1
+        fila = ['pessoa1', 'pessoa2']
+        escolhido = self.alocador._obter_proxima_pessoa_da_fila(fila, 'funcao2', dt, df)
+        
+        self.assertNotEqual(escolhido, pessoa, "Pessoa já alocada no dia não deve ser escolhida novamente")
+        self.assertEqual(escolhido, 'pessoa2')
+
+    def test_alocacao_com_predefinicao_nao_colidente(self):
+        # Cenário 2: Pessoa tem designação predefinida NÃO colidente -> Deve ser permitida
+        dt = datetime.date(2025, 12, 2)
+        pessoa = 'pessoa1'
+        
+        # Configura predefinição
+        self.mock_config.designacoes_predefinidas = {
+            dt: [{'tipo': 'leitura', 'pessoa': pessoa}]
+        }
+        # Configura colisoes (leitura não colide com funcao1)
+        self.mock_config.colisoes_proibidas = {
+            'outra_coisa': ['funcao1']
+        }
+        
+        df = pd.DataFrame(index=[dt], columns=['funcao1'])
+        
+        # Tenta alocar para funcao1
+        fila = ['pessoa1']
+        escolhido = self.alocador._obter_proxima_pessoa_da_fila(fila, 'funcao1', dt, df)
+        
+        self.assertEqual(escolhido, pessoa, "Pessoa com predefinição não colidente deve ser permitida")
+
+    def test_simulated_annealing_execution(self):
+        # Configura um cenário simples para teste de integração do algoritmo
+        datas = [datetime.date(2025, 1, 1), datetime.date(2025, 1, 2)]
+        self.mock_config.datas_validas = datas
+        self.mock_config.funcoes = {
+            'funcao1': {'pessoas': ['p1', 'p2'], 'icone': 'A', 'nome': 'Função 1'},
+            'funcao2': {'pessoas': ['p2', 'p3'], 'icone': 'B', 'nome': 'Função 2'}
+        }
+        self.mock_config.pessoas = {
+            'p1': {'nome': 'Ana Silva'},
+            'p2': {'nome': 'Beto Souza'},
+            'p3': {'nome': 'Carlos Lima'}
+        }
+        self.mock_config.designacoes_predefinidas = {}
+        self.mock_config.colisoes_proibidas = {}
+        self.mock_config.tipos_designacoes_predefinidas = {}
+        self.mock_config.cancelamentos = {}
+
+        # Executa o algoritmo com poucos passos
+        self.alocador._executar(num_passos=50, temp_inicial=10.0)
+
+        # Verificações
+        self.assertIsNotNone(self.alocador.solucao, "A solução não deve ser None")
+        self.assertIsInstance(self.alocador.solucao, pd.DataFrame, "A solução deve ser um DataFrame")
+        
+        # Verifica dimensões (2 dias x 2 funções)
+        self.assertEqual(self.alocador.solucao.shape, (2, 2))
+        
+        # Verifica se os scores foram calculados
+        self.assertIsNotNone(self.alocador.score_total)
+        
+        # Verifica se os nomes foram substituídos corretamente (IDs -> Primeiros Nomes)
+        valores_flat = self.alocador.solucao.values.flatten()
+        nomes_esperados = ['Ana', 'Beto', 'Carlos']
+        for val in valores_flat:
+            self.assertIn(val, nomes_esperados, f"Valor '{val}' não é um nome esperado")
+
+        # Verifica se as colunas viraram MultiIndex
+        self.assertIsInstance(self.alocador.solucao.columns, pd.MultiIndex)
 
 if __name__ == '__main__':
     unittest.main()
