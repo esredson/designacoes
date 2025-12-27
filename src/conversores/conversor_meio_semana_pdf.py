@@ -261,7 +261,7 @@ class ConversorMeioSemanaPdf(Conversor):
                                 # Difícil sem mais info. Vamos tentar usar o texto todo se não tiver gap.
                                 # Ou talvez o nome esteja no config e possamos validar?
                                 # Por enquanto, pega tudo.
-                                # FIX: Se o nome for "Augusto" e estiver no tema, e "Diego" for o designado.
+                                # FIX: Se o nome for "Pedro" e estiver no tema, e "João" for o designado.
                                 # Se houver gap, pegamos o último. Se não houver gap, pegamos tudo.
                                 # Mas se pegarmos tudo, o _adicionar_designacao vai tentar dar match no config.
                                 # Se "Augusto" estiver no config e aparecer no texto, ele pode ser pego.
@@ -273,7 +273,7 @@ class ConversorMeioSemanaPdf(Conversor):
                                 # Mas _adicionar_designacao faz match fuzzy e retorna o primeiro.
                                 # Vamos tentar passar a string inteira e confiar que o nome da pessoa está no final?
                                 # Ou tentar quebrar a string por espaços e ver se o último token é um nome?
-                                # "Tema do discurso Augusto Diego" -> "Diego"
+                                # "Tema do discurso Pedro João" -> "João"
                                 
                                 # Vamos tentar usar a lógica de "última palavra(s) que formam um nome válido"
                                 # Mas nomes podem ser compostos.
@@ -405,7 +405,7 @@ class ConversorMeioSemanaPdf(Conversor):
                      matches.append((i, chave))
                  else:
                      # Fallback: Tentar match fuzzy apenas com o primeiro nome
-                     # Isso ajuda se o OCR leu "Dlego" em vez de "Diego"
+                     # Isso ajuda se o OCR leu "Predo" em vez de "Pedro"
                      palavra_lower = palavra.lower()
                      for nome_exibicao, chave_pessoa_map in self.mapa_pessoas.items():
                          primeiro_nome = nome_exibicao.split()[0]
