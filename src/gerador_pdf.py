@@ -11,11 +11,11 @@ import util
 import os
 
 class GeradorPDF:
-    def __init__(self, configuracoes_gerais, mes, ano, debug=False):
-        self._config = configuracoes_gerais
-        self._mes = mes
-        self._ano = ano
-        self._debug = debug
+    def __init__(self, config):
+        self._config = config
+        self._mes = config.mes
+        self._ano = config.ano
+        self._debug = config.debug
         
         # Tenta registrar fonte de Emoji (Windows)
         try:
@@ -270,11 +270,11 @@ if __name__ == "__main__":
     
     try:
         # Inicialização centralizada
-        args, configuracoes_gerais, funcional, agenda, mes, ano = inicializar(descricao='Gerador de PDF de Designações')
+        args, config, mes, ano = inicializar(descricao='Gerador de PDF de Designações')
         
         print(f"Iniciando geração de PDF para {mes}/{ano}...")
         
-        gerador = GeradorPDF(configuracoes_gerais, mes, ano, debug=args.debug)
+        gerador = GeradorPDF(config)
         gerador.executar()
         
     except Exception as e:

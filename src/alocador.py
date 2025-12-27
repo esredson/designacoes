@@ -9,11 +9,9 @@ import math
 
 class Alocador:
 
-    def __init__(self, funcional, agenda, designacoes_predefinidas, debug=False):
-        self._funcional = funcional
-        self._agenda = agenda
-        self._designacoes_predefinidas = designacoes_predefinidas
-        self._debug = debug
+    def __init__(self, config):
+        self.config = config
+        self._debug = config.debug
         self._solucao = None
         self._score_total = None
         self._score_vertical = None
@@ -96,7 +94,7 @@ class Alocador:
         self._tempo_execucao = time.time() - inicio
 
         # Inserir cancelamentos
-        cancelamentos = self._agenda.cancelamentos
+        cancelamentos = self.config.cancelamentos
         if cancelamentos:
             cols = self._solucao.columns
             for dt, descricao in cancelamentos.items():
@@ -111,12 +109,12 @@ class Alocador:
             self._solucao.sort_index(inplace=True)
 
         # Substitui IDs pelos Primeiros Nomes (para o CSV/PDF)
-        self._solucao.replace({k: v['nome'].split()[0] for k, v in self._funcional.pessoas.items()}, inplace=True)
+        self._solucao.replace({k: v['nome'].split()[0] for k, v in self.config.pessoas.items()}, inplace=True)
         
         # Renomeia colunas para MultiIndex (Icone, Nome)
         novas_colunas = []
         for chave_coluna in self._solucao.columns:
-             config_funcao = self._funcional.funcoes.get(chave_coluna)
+             config_funcao = self.config.funcoes.get(chave_coluna)
              if config_funcao:
                  icone = config_funcao.get('icone', '')
                  nome = config_funcao.get('nome', chave_coluna)
@@ -128,8 +126,8 @@ class Alocador:
 
     def _gerar_vizinho(self, solucao):
         nova_solucao = solucao.copy()
-        datas = self._agenda.datas_validas
-        funcoes = list(self._funcional.funcoes.keys())
+        datas = self.config.datas_validas
+        funcoes = list(self.config.funcoes.keys())
         
         # Tenta encontrar uma troca válida (limite de tentativas para não travar)
         for _ in range(20):
@@ -139,7 +137,7 @@ class Alocador:
             pessoa1 = nova_solucao.at[dt, funcao1]
             
             # Candidato a troca: qualquer pessoa que saiba fazer a função
-            candidatos = self._funcional.funcoes[funcao1]['pessoas']
+            candidatos = self.config.funcoes[funcao1]['pessoas']
             pessoa2 = random.choice(candidatos)
             
             if pessoa1 == pessoa2:
@@ -155,7 +153,7 @@ class Alocador:
             if funcao2:
                 # Caso de Troca (Swap)
                 # Verifica se pessoa1 sabe fazer a funcao2
-                if pessoa1 not in self._funcional.funcoes[funcao2]['pessoas']:
+                if pessoa1 not in self.config.funcoes[funcao2]['pessoas']:
                     continue
                 
                 # Verifica impedimentos (hard constraints)
@@ -181,12 +179,12 @@ class Alocador:
 
     def _alocar(self):
         df = pd.DataFrame(
-            columns=self._funcional.funcoes.keys(), 
-            index=self._agenda.datas_validas
+            columns=self.config.funcoes.keys(), 
+            index=self.config.datas_validas
         )
 
         # Coloca as funções em ordem de núm. de pessoas disponíveis, pra iniciar a alocação pela função mais restrita:
-        funcoes_ordem_num_pessoas_asc = sorted(self._funcional.funcoes.keys(), key=lambda funcao: len(self._funcional.funcoes[funcao]['pessoas']))
+        funcoes_ordem_num_pessoas_asc = sorted(self.config.funcoes.keys(), key=lambda funcao: len(self.config.funcoes[funcao]['pessoas']))
 
         for funcao in funcoes_ordem_num_pessoas_asc:
             self._alocar_pessoas_para_funcao(funcao, df)
@@ -194,10 +192,10 @@ class Alocador:
         return df
 
     def _alocar_pessoas_para_funcao(self, funcao, df):
-        pessoas_da_funcao=self._funcional.funcoes[funcao]['pessoas']
+        pessoas_da_funcao=self.config.funcoes[funcao]['pessoas']
         random.shuffle(pessoas_da_funcao)
         fila_pessoas_para_alocacao = pessoas_da_funcao.copy()
-        for dt in self._agenda.datas_validas:
+        for dt in self.config.datas_validas:
             pessoa = self._obter_proxima_pessoa_da_fila(fila_pessoas_para_alocacao, funcao, dt, df)
             if pessoa is None:
                 fila_pessoas_para_alocacao += pessoas_da_funcao # Esgotou o pool de pessoas disponíveis? Repete o pool
@@ -218,17 +216,17 @@ class Alocador:
         return pessoa in df.loc[dt].values
     
     def _pessoa_estah_impedida_para_a_funcao_na_data(self, pessoa, funcao, dt):
-        for x in self._designacoes_predefinidas.datas[dt]:
+        for x in self.config.designacoes_predefinidas.get(dt, []):
             if (
-                x['tipo'] in self._funcional.colisoes_proibidas.keys() 
-                and funcao in self._funcional.colisoes_proibidas[x['tipo']] 
+                x['tipo'] in self.config.colisoes_proibidas.keys() 
+                and funcao in self.config.colisoes_proibidas[x['tipo']] 
                 and x['pessoa'] == pessoa
             ):
                 return True
 
     def _quantificar_variancia_vertical(self, df):
         scores = []
-        for pessoa in self._funcional.pessoas.keys():
+        for pessoa in self.config.pessoas.keys():
             rows, _ = np.where(df.values == pessoa)
             rows = np.sort(rows)
             
@@ -244,8 +242,8 @@ class Alocador:
 
     def _quantificar_variancia_horizontal(self, df):
         variancias = []
-        for pessoa in self._funcional.pessoas.keys():
-            funcoes_eligible = [f for f, data in self._funcional.funcoes.items() if pessoa in data['pessoas']]
+        for pessoa in self.config.pessoas.keys():
+            funcoes_eligible = [f for f, data in self.config.funcoes.items() if pessoa in data['pessoas']]
             
             if not funcoes_eligible:
                 continue
@@ -261,13 +259,13 @@ class Alocador:
         return np.mean(variancias) if variancias else 0
     
     def _contar_designacoes_predefinidas_por_pessoa(self):
-        counts = {p: 0 for p in self._funcional.pessoas.keys()}
-        for dt, assignments in self._designacoes_predefinidas.datas.items():
+        counts = {p: 0 for p in self.config.pessoas.keys()}
+        for dt, assignments in self.config.designacoes_predefinidas.items():
             for assignment in assignments:
                 pessoa = assignment['pessoa']
                 tipo = assignment['tipo']
                 
-                if self._funcional.tipos_designacoes_predefinidas[tipo].get('desconsiderar_ao_contar_designacoes'):
+                if self.config.tipos_designacoes_predefinidas[tipo].get('desconsiderar_ao_contar_designacoes'):
                     continue
 
                 if pessoa in counts:
@@ -280,7 +278,7 @@ class Alocador:
         
         # Combine with designacoes_predefinidas counts
         total_counts = []
-        for pessoa in self._funcional.pessoas.keys():
+        for pessoa in self.config.pessoas.keys():
             count = solution_counts.get(pessoa, 0) + designacoes_predefinidas_counts.get(pessoa, 0)
             total_counts.append(count)
             
@@ -333,14 +331,12 @@ class Alocador:
 if __name__ == "__main__":
     import sys
     from inicializacao import inicializar
-    from designacoes_predefinidas import DesignacoesPredefinidas
     
     try:
         # Inicialização centralizada
-        args, configuracoes_gerais, funcional, agenda, mes, ano = inicializar(descricao='Alocador de Designações')
+        args, config, mes, ano = inicializar(descricao='Alocador de Designações')
         
-        designacoes_predefinidas = DesignacoesPredefinidas(mes, ano, funcional, agenda, debug=args.debug)
-        alocador = Alocador(funcional, agenda, designacoes_predefinidas, debug=args.debug)
+        alocador = Alocador(config)
         
         alocador.executar(mes, ano)
         

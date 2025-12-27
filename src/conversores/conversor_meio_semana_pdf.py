@@ -10,13 +10,13 @@ except ImportError:
 import util
 
 class ConversorMeioSemanaPdf(Conversor):
-    def __init__(self, mes, ano, debug=False):
+    def __init__(self, config):
         chaves_permitidas = [
             'presidente_meio_semana', 'tesouros', 'joias', 'leitura_biblia', 
             'faca_seu_melhor', 'nossa_vida_crista', 'estudo_biblico', 
             'leitura_estudo_biblico', 'oracao_inicial', 'oracao_final'
         ]
-        super().__init__(mes, ano, chaves_permitidas, debug)
+        super().__init__(config, chaves_permitidas)
 
     def executar(self):
         nome_arquivo_pdf = f'{self.ano}-{self.mes:02d}-predefinidas-meio-semana.pdf'
@@ -452,9 +452,9 @@ if __name__ == "__main__":
     try:
         # Inicialização centralizada
         # Nota: inicializar() carrega configs que não usamos aqui, mas garante consistência de args (mes/ano)
-        args, _, _, _, mes, ano = inicializar(descricao='Converte PDF de designações de meio de semana para JSON.')
+        args, config, mes, ano = inicializar(descricao='Converte PDF de designações de meio de semana para JSON.')
 
-        conversor = ConversorMeioSemanaPdf(mes, ano, debug=args.debug)
+        conversor = ConversorMeioSemanaPdf(config)
         conversor.executar()
         
     except Exception as e:

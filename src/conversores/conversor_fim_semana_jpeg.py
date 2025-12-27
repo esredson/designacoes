@@ -21,9 +21,9 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 import util
 
 class ConversorFimSemanaJpeg(Conversor):
-    def __init__(self, mes, ano, debug=False):
+    def __init__(self, config):
         chaves_permitidas = ['presidente_fim_semana', 'orador', 'sentinela', 'leitura_sentinela']
-        super().__init__(mes, ano, chaves_permitidas, debug)
+        super().__init__(config, chaves_permitidas)
 
         # Inicializa o leitor do EasyOCR para português
         if self.debug:
@@ -255,9 +255,9 @@ if __name__ == "__main__":
 
     try:
         # Inicialização centralizada
-        args, _, _, _, mes, ano = inicializar(descricao='Converte JPEG de designações para JSON.')
+        args, config, mes, ano = inicializar(descricao='Converte JPEG de designações para JSON.')
 
-        conversor = ConversorFimSemanaJpeg(mes, ano, debug=args.debug)
+        conversor = ConversorFimSemanaJpeg(config)
         conversor.executar()
         
     except Exception as e:

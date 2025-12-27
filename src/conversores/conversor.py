@@ -8,15 +8,15 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 import util
 
 class Conversor:
-    def __init__(self, mes, ano, chaves_permitidas=None, debug=False):
-        self.mes = mes
-        self.ano = ano
-        self.debug = debug
+    def __init__(self, config, chaves_permitidas=None):
+        self.config = config
+        self.mes = config.mes
+        self.ano = config.ano
+        self.debug = config.debug
         
         # Carregar configurações
-        self.config_funcional = util.config('funcional')
-        self.pessoas_config = self.config_funcional.get('pessoas', {})
-        self.tipos_designacoes = self.config_funcional.get('tipos_designacoes_predefinidas', {})
+        self.pessoas_config = config.pessoas
+        self.tipos_designacoes = config.tipos_designacoes_predefinidas
         
         # Mapeamento reverso: Nome de Exibição -> Chave (ID)
         self.mapa_funcoes = {}

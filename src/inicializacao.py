@@ -1,8 +1,6 @@
 import argparse
 import util
-from funcional import Funcional
-from agenda import Agenda
-from configuracoes_gerais import ConfiguracoesGerais
+from config import Config
 
 def inicializar(descricao="Gerador de Designações", parser=None):
     if parser is None:
@@ -15,11 +13,8 @@ def inicializar(descricao="Gerador de Designações", parser=None):
     args = parser.parse_args()
     
     util.definir_mes_ano_referencia(args.mes, args.ano)
-    
-    configuracoes_gerais = ConfiguracoesGerais(util.config('geral'))
-    funcional = Funcional(util.config('funcional'))
-    agenda = Agenda(util.config('agenda'))
-    
     mes, ano = util.obter_mes_ano_referencia()
     
-    return args, configuracoes_gerais, funcional, agenda, mes, ano
+    config = Config(mes, ano, debug=args.debug)
+    
+    return args, config, mes, ano
