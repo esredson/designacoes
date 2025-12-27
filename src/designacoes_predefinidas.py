@@ -5,9 +5,10 @@ import json
 
 class DesignacoesPredefinidas:
 
-    def __init__(self, mes, ano, funcional, agenda, diretorio_dados='data'):
+    def __init__(self, mes, ano, funcional, agenda, diretorio_dados='data', debug=False):
         self._funcional = funcional
         self._agenda = agenda
+        self.debug = debug
         
         dados = self._carregar_dados(mes, ano, diretorio_dados)
         self._gerar_datas(dados)
@@ -20,10 +21,12 @@ class DesignacoesPredefinidas:
         dados_designacoes_predefinidas = {}
 
         if not arquivos_encontrados:
-            print(f"AVISO: Nenhum arquivo de designações predefinidas encontrado com o padrão: {caminho_padrao}")
+            if self.debug:
+                print(f"AVISO: Nenhum arquivo de designações predefinidas encontrado com o padrão: {caminho_padrao}")
         else:
             for arquivo in arquivos_encontrados:
-                print(f"Carregando designações predefinidas de: {arquivo}")
+                if self.debug:
+                    print(f"Carregando designações predefinidas de: {arquivo}")
                 with open(arquivo, 'r', encoding='utf-8') as f:
                     conteudo_arquivo = json.load(f)
                     if "designacoes_predefinidas" in conteudo_arquivo:
@@ -32,8 +35,9 @@ class DesignacoesPredefinidas:
                     else:
                         print(f"AVISO: Arquivo {arquivo} não contém a chave 'designacoes_predefinidas'. Ignorando.")
         
-        print("Conteúdo carregado de Designações Predefinidas:")
-        print(json.dumps(dados_designacoes_predefinidas, indent=4, ensure_ascii=False))
+        if self.debug:
+            print("Conteúdo carregado de Designações Predefinidas:")
+            print(json.dumps(dados_designacoes_predefinidas, indent=4, ensure_ascii=False))
         
         return dados_designacoes_predefinidas
    

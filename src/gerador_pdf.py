@@ -11,10 +11,11 @@ import util
 import os
 
 class GeradorPDF:
-    def __init__(self, configuracoes_gerais, mes, ano):
+    def __init__(self, configuracoes_gerais, mes, ano, debug=False):
         self._config = configuracoes_gerais
         self._mes = mes
         self._ano = ano
+        self._debug = debug
         
         # Tenta registrar fonte de Emoji (Windows)
         try:
@@ -24,6 +25,24 @@ class GeradorPDF:
                 pdfmetrics.registerFont(TTFont('EmojiFont', 'C:\\Windows\\Fonts\\seguisym.ttf'))
             except:
                 pass # Falha silenciosa, usará fonte padrão se não encontrar
+
+    def executar(self):
+        nome_arquivo_csv = f'{self._ano}-{self._mes:02d}-designacoes.csv'
+        caminho_arquivo_csv = os.path.join('data', nome_arquivo_csv)
+        nome_arquivo_pdf = nome_arquivo_csv.replace('.csv', '.pdf')
+        caminho_arquivo_pdf = os.path.join('data', nome_arquivo_pdf)
+        
+        if not os.path.exists(caminho_arquivo_csv):
+            print(f"Erro: Arquivo CSV não encontrado: {caminho_arquivo_csv}")
+            return False
+            
+        print(f"Lendo dados de {caminho_arquivo_csv}...")
+        dataframe = pd.read_csv(caminho_arquivo_csv, index_col=0, header=[0, 1])
+        
+        print("Gerando arquivo PDF...")
+        self.gerar(dataframe, caminho_arquivo_pdf)
+        print(f"Sucesso! PDF salvo em {caminho_arquivo_pdf}")
+        return True
 
     def gerar(self, dataframe, caminho_arquivo):
         # Margens
@@ -247,38 +266,16 @@ class GeradorPDF:
 
 if __name__ == "__main__":
     import sys
-    from configuracoes_gerais import ConfiguracoesGerais
+    from inicializacao import inicializar
     
     try:
-        # Obtém mês e ano atuais (sem argumentos de linha de comando)
-        mes, ano = util.obter_mes_ano_referencia()
+        # Inicialização centralizada
+        args, configuracoes_gerais, funcional, agenda, mes, ano = inicializar(descricao='Gerador de PDF de Designações')
         
         print(f"Iniciando geração de PDF para {mes}/{ano}...")
         
-        # Carrega configurações
-        config_geral = ConfiguracoesGerais(util.config('geral'))
-        
-        # Define caminhos dos arquivos
-        nome_arquivo_csv = f'{ano}-{mes:02d}-designacoes.csv'
-        caminho_arquivo_csv = os.path.join('data', nome_arquivo_csv)
-        nome_arquivo_pdf = nome_arquivo_csv.replace('.csv', '.pdf')
-        caminho_arquivo_pdf = os.path.join('data', nome_arquivo_pdf)
-        
-        # Verifica se o CSV existe
-        if not os.path.exists(caminho_arquivo_csv):
-            print(f"Erro: Arquivo CSV não encontrado: {caminho_arquivo_csv}")
-            sys.exit(1)
-            
-        # Carrega os dados
-        print(f"Lendo dados de {caminho_arquivo_csv}...")
-        df_solucao = pd.read_csv(caminho_arquivo_csv, index_col=0, header=[0, 1])
-        
-        # Gera o PDF
-        print("Gerando arquivo PDF...")
-        gerador = GeradorPDF(config_geral, mes, ano)
-        gerador.gerar(df_solucao, caminho_arquivo_pdf)
-        
-        print(f"Sucesso! PDF salvo em {caminho_arquivo_pdf}")
+        gerador = GeradorPDF(configuracoes_gerais, mes, ano, debug=args.debug)
+        gerador.executar()
         
     except Exception as e:
         print(f"Erro fatal: {str(e)}")

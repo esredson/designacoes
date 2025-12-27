@@ -3,7 +3,10 @@ import re
 import os
 import sys
 import argparse
-from conversor import Conversor
+try:
+    from conversores.conversor import Conversor
+except ImportError:
+    from conversor import Conversor
 import util
 
 class ConversorMeioSemanaPdf(Conversor):
@@ -14,6 +17,21 @@ class ConversorMeioSemanaPdf(Conversor):
             'leitura_estudo_biblico', 'oracao_inicial', 'oracao_final'
         ]
         super().__init__(mes, ano, chaves_permitidas, debug)
+
+    def executar(self):
+        nome_arquivo_pdf = f'{self.ano}-{self.mes:02d}-predefinidas-meio-semana.pdf'
+        nome_arquivo_json = f'{self.ano}-{self.mes:02d}-predefinidas-meio-semana.json'
+        
+        caminho_pdf = os.path.join('data', nome_arquivo_pdf)
+        caminho_json = os.path.join('data', nome_arquivo_json)
+        
+        if not os.path.exists(caminho_pdf):
+             print(f"Aviso: Arquivo PDF não encontrado: {caminho_pdf}")
+             return False
+
+        print(f"Convertendo {caminho_pdf}...")
+        self.extrair(caminho_pdf, caminho_json)
+        return True
 
     def extrair(self, caminho_pdf, caminho_json_saida):
         if not os.path.exists(caminho_pdf):
@@ -428,22 +446,16 @@ class ConversorMeioSemanaPdf(Conversor):
             pass
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Converte PDF de designações de meio de semana para JSON.')
-    parser.add_argument('--debug', action='store_true', help='Ativa modo debug')
-    args = parser.parse_args()
+    import argparse
+    from inicializacao import inicializar
 
     try:
-        mes, ano = util.obter_mes_ano_referencia()
-        nome_arquivo_pdf = f'{ano}-{mes:02d}-predefinidas-meio-semana.pdf'
-        nome_arquivo_json = f'{ano}-{mes:02d}-predefinidas-meio-semana.json'
-        
-        caminho_pdf = os.path.join('data', nome_arquivo_pdf)
-        caminho_json = os.path.join('data', nome_arquivo_json)
-        
-        print(f"Convertendo {caminho_pdf}...")
-        
+        # Inicialização centralizada
+        # Nota: inicializar() carrega configs que não usamos aqui, mas garante consistência de args (mes/ano)
+        args, _, _, _, mes, ano = inicializar(descricao='Converte PDF de designações de meio de semana para JSON.')
+
         conversor = ConversorMeioSemanaPdf(mes, ano, debug=args.debug)
-        conversor.extrair(caminho_pdf, caminho_json)
+        conversor.executar()
         
     except Exception as e:
         print(f"Erro: {str(e)}")

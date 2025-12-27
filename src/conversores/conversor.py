@@ -84,7 +84,8 @@ class Conversor:
             json.dump(saida, f, indent=4, ensure_ascii=False)
         
         print(f"JSON gerado em: {caminho_json_saida}")
-        print(json.dumps(saida, indent=4, ensure_ascii=False))
+        if self.debug:
+            print(json.dumps(saida, indent=4, ensure_ascii=False))
 
     def exibir_relatorio(self):
         if self.debug or self.relatorio_erros['pessoas_nao_encontradas'] or self.relatorio_erros['funcoes_nao_encontradas'] or self.relatorio_erros['outros_erros']:

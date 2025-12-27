@@ -8,7 +8,10 @@ import re
 import argparse
 import warnings
 from difflib import get_close_matches
-from conversor import Conversor
+try:
+    from conversores.conversor import Conversor
+except ImportError:
+    from conversor import Conversor
 
 # Suppress specific warnings
 warnings.filterwarnings("ignore", category=UserWarning, message=".*pin_memory.*")
@@ -26,6 +29,21 @@ class ConversorFimSemanaJpeg(Conversor):
         if self.debug:
             print("Inicializando EasyOCR (isso pode demorar um pouco na primeira vez)...")
         self.reader = easyocr.Reader(['pt'], gpu=False, verbose=False)
+
+    def executar(self):
+        nome_arquivo_jpeg = f'{self.ano}-{self.mes:02d}-predefinidas-fim-semana.jpeg'
+        nome_arquivo_json = f'{self.ano}-{self.mes:02d}-predefinidas-fim-semana.json'
+        
+        caminho_jpeg = os.path.join('data', nome_arquivo_jpeg)
+        caminho_json = os.path.join('data', nome_arquivo_json)
+        
+        if not os.path.exists(caminho_jpeg):
+             print(f"Aviso: Arquivo JPEG não encontrado: {caminho_jpeg}")
+             return False
+
+        print(f"Convertendo {caminho_jpeg}...")
+        self.extrair(caminho_jpeg, caminho_json)
+        return True
 
     def extrair(self, caminho_imagem, caminho_json_saida):
         if not os.path.exists(caminho_imagem):
@@ -233,22 +251,14 @@ class ConversorFimSemanaJpeg(Conversor):
             return []
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Converte JPEG de designações para JSON.')
-    parser.add_argument('--debug', action='store_true', help='Ativa modo debug (logs e imagens)')
-    args = parser.parse_args()
+    from inicializacao import inicializar
 
     try:
-        mes, ano = util.obter_mes_ano_referencia()
-        nome_arquivo_jpeg = f'{ano}-{mes:02d}-predefinidas-fim-semana.jpeg'
-        nome_arquivo_json = f'{ano}-{mes:02d}-predefinidas-fim-semana.json'
-        
-        caminho_jpeg = os.path.join('data', nome_arquivo_jpeg)
-        caminho_json = os.path.join('data', nome_arquivo_json)
-        
-        print(f"Convertendo {caminho_jpeg}...")
-        
+        # Inicialização centralizada
+        args, _, _, _, mes, ano = inicializar(descricao='Converte JPEG de designações para JSON.')
+
         conversor = ConversorFimSemanaJpeg(mes, ano, debug=args.debug)
-        conversor.extrair(caminho_jpeg, caminho_json)
+        conversor.executar()
         
     except Exception as e:
         print(f"Erro: {str(e)}")

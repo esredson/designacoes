@@ -9,10 +9,11 @@ import math
 
 class Alocador:
 
-    def __init__(self, funcional, agenda, designacoes_predefinidas):
+    def __init__(self, funcional, agenda, designacoes_predefinidas, debug=False):
         self._funcional = funcional
         self._agenda = agenda
         self._designacoes_predefinidas = designacoes_predefinidas
+        self._debug = debug
         self._solucao = None
         self._score_total = None
         self._score_vertical = None
@@ -20,7 +21,7 @@ class Alocador:
         self._score_distribuicao = None
         self._tempo_execucao = None
 
-    def executar(self, num_passos=10000, peso_vertical=1.0, peso_horizontal=1.0, peso_distribuicao=1.0, temp_inicial=100.0, resfriamento=0.995):
+    def _executar(self, num_passos=10000, peso_vertical=1.0, peso_horizontal=1.0, peso_distribuicao=1.0, temp_inicial=100.0, resfriamento=0.995):
         inicio = time.time()
         
         # Pre-calcula contagem de designacoes predefinidas
@@ -35,6 +36,9 @@ class Alocador:
         score_d = self._quantificar_variancia_distribuicao(atual_solucao, designacoes_predefinidas_counts)
         atual_score = (score_v * peso_vertical) + (score_h * peso_horizontal) + (score_d * peso_distribuicao)
         
+        if self._debug:
+            print(f"DEBUG: Score inicial: {atual_score}")
+
         melhor_solucao = atual_solucao.copy()
         melhor_score_total = atual_score
         melhor_score_vertical = score_v
@@ -80,6 +84,9 @@ class Alocador:
             temp *= resfriamento
             if temp < 0.0001: # Otimização: parar se esfriar demais
                  break
+
+        if self._debug:
+            print(f"DEBUG: Melhor score encontrado: {melhor_score_total}")
 
         self._solucao = melhor_solucao
         self._score_total = melhor_score_total
@@ -302,3 +309,41 @@ class Alocador:
     @property
     def tempo_execucao(self):
         return self._tempo_execucao
+
+    def executar(self, mes, ano):
+        import os
+        
+        nome_arquivo_csv = f'{ano}-{mes:02d}-designacoes.csv'
+        caminho_arquivo_csv = os.path.join('data', nome_arquivo_csv)
+        
+        print("Montando as designações...")
+        self._executar()
+
+        if self._debug:
+            print(self.solucao)
+            print(f"Score Total: {self.score_total}")
+            print(f"Score Vertical: {self.score_vertical}")
+            print(f"Score Horizontal: {self.score_horizontal}")
+            print(f"Score Distribuição: {self.score_distribuicao}")
+            print(f"Tempo de execução: {self.tempo_execucao:.2f} segundos")
+
+        self.solucao.to_csv(caminho_arquivo_csv)
+        print(f"Solução salva em {caminho_arquivo_csv}")
+
+if __name__ == "__main__":
+    import sys
+    from inicializacao import inicializar
+    from designacoes_predefinidas import DesignacoesPredefinidas
+    
+    try:
+        # Inicialização centralizada
+        args, configuracoes_gerais, funcional, agenda, mes, ano = inicializar(descricao='Alocador de Designações')
+        
+        designacoes_predefinidas = DesignacoesPredefinidas(mes, ano, funcional, agenda, debug=args.debug)
+        alocador = Alocador(funcional, agenda, designacoes_predefinidas, debug=args.debug)
+        
+        alocador.executar(mes, ano)
+        
+    except Exception as e:
+        print(f"Erro fatal: {str(e)}")
+        sys.exit(1)
