@@ -11,6 +11,7 @@ from gerador_pdf import GeradorPDF
 from conversores.conversor_meio_semana_pdf import ConversorMeioSemanaPdf
 from conversores.conversor_fim_semana_jpeg import ConversorFimSemanaJpeg
 from inicializacao import inicializar
+from config import Config
 
 # Inicialização centralizada
 args, config, mes, ano = inicializar()

@@ -4,6 +4,9 @@ import time
 import util
 import numpy as np
 import math
+import os
+import glob
+import json
 
 #from tqdm import tqdm
 
@@ -18,6 +21,50 @@ class Alocador:
         self._score_horizontal = None
         self._score_distribuicao = None
         self._tempo_execucao = None
+        
+        self._carregar_designacoes_predefinidas()
+
+    def _carregar_designacoes_predefinidas(self):
+        padrao_arquivo = f"{self.config.ano}-{self.config.mes:02d}-predefinidas*.json"
+        caminho_padrao = os.path.join(self.config.diretorio_dados, padrao_arquivo)
+
+        arquivos_encontrados = glob.glob(caminho_padrao)
+        dados_designacoes_predefinidas = {}
+
+        if not arquivos_encontrados:
+            if self._debug:
+                print(f"AVISO: Nenhum arquivo de designações predefinidas encontrado com o padrão: {caminho_padrao}")
+        else:
+            for arquivo in arquivos_encontrados:
+                if self._debug:
+                    print(f"Carregando designações predefinidas de: {arquivo}")
+                with open(arquivo, 'r', encoding='utf-8') as f:
+                    conteudo_arquivo = json.load(f)
+                    if "designacoes_predefinidas" in conteudo_arquivo:
+                        dados = conteudo_arquivo["designacoes_predefinidas"]
+                        dados_designacoes_predefinidas.update(dados)
+                    else:
+                        if self._debug:
+                            print(f"AVISO: Arquivo {arquivo} não contém a chave 'designacoes_predefinidas'. Ignorando.")
+        
+        if self._debug:
+            print("Conteúdo carregado de Designações Predefinidas:")
+            print(json.dumps(dados_designacoes_predefinidas, indent=4, ensure_ascii=False))
+            
+        # Gerar datas predefinidas
+        self._designacoes_predefinidas = {}
+        for str_data in dados_designacoes_predefinidas.keys():
+            dt = util.converter_string_para_data(str_data)
+            self._designacoes_predefinidas[dt] = dados_designacoes_predefinidas[str_data]
+            
+        for dt in self._designacoes_predefinidas.keys():
+            if dt not in self.config.datas_validas: # Verifica contra datas validas (sem cancelamentos)
+                 if self._debug:
+                    print(f"Data predefinida {dt} não está entre as programadas")
+
+    @property
+    def designacoes_predefinidas(self):
+        return self._designacoes_predefinidas
 
     def _executar(self, num_passos=10000, peso_vertical=1.0, peso_horizontal=1.0, peso_distribuicao=1.0, temp_inicial=100.0, resfriamento=0.995):
         inicio = time.time()
@@ -216,7 +263,7 @@ class Alocador:
         return pessoa in df.loc[dt].values
     
     def _pessoa_estah_impedida_para_a_funcao_na_data(self, pessoa, funcao, dt):
-        for x in self.config.designacoes_predefinidas.get(dt, []):
+        for x in self.designacoes_predefinidas.get(dt, []):
             if (
                 x['tipo'] in self.config.colisoes_proibidas.keys() 
                 and funcao in self.config.colisoes_proibidas[x['tipo']] 
@@ -260,7 +307,7 @@ class Alocador:
     
     def _contar_designacoes_predefinidas_por_pessoa(self):
         counts = {p: 0 for p in self.config.pessoas.keys()}
-        for dt, assignments in self.config.designacoes_predefinidas.items():
+        for dt, assignments in self.designacoes_predefinidas.items():
             for assignment in assignments:
                 pessoa = assignment['pessoa']
                 tipo = assignment['tipo']

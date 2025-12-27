@@ -17,6 +17,10 @@ class TestAlocador(unittest.TestCase):
         # Dependências simuladas (Mock)
         self.mock_config = MagicMock()
         self.mock_config.debug = False
+        self.mock_config.diretorio_dados = 'data'
+        self.mock_config.ano = 2025
+        self.mock_config.mes = 12
+        self.mock_config.datas_validas = []
 
         # Configuração básica do mock funcional
         self.mock_config.pessoas = {
@@ -28,8 +32,10 @@ class TestAlocador(unittest.TestCase):
             'funcao2': {'nome': 'Funcao 2', 'pessoas': ['pessoa1', 'pessoa2']}
         }
         
-        # Inicializa o Alocador com mocks
-        self.alocador = Alocador(self.mock_config)
+        # Inicializa o Alocador com mocks, evitando carregar arquivos reais
+        with unittest.mock.patch.object(Alocador, '_carregar_designacoes_predefinidas') as mock_carregar:
+            self.alocador = Alocador(self.mock_config)
+            self.alocador._designacoes_predefinidas = {}
 
     def test_quantificar_variancia_vertical(self):
         # Cenário: 
@@ -152,7 +158,7 @@ class TestAlocador(unittest.TestCase):
 
         # 2. Configurar designacoes_predefinidas
         # A pessoa tem esse tipo predefinido na data
-        self.mock_config.designacoes_predefinidas = {
+        self.alocador._designacoes_predefinidas = {
             dt: [{'tipo': tipo_predefinido, 'pessoa': pessoa}]
         }
 
@@ -174,7 +180,7 @@ class TestAlocador(unittest.TestCase):
         pessoa = 'pessoa_teste'
         funcao = 'qualquer_funcao'
         
-        self.mock_config.designacoes_predefinidas = {} # Vazio
+        self.alocador._designacoes_predefinidas = {} # Vazio
         self.mock_config.colisoes_proibidas = {'algum_tipo': ['qualquer_funcao']}
 
         impedida = self.alocador._pessoa_estah_impedida_para_a_funcao_na_data(
@@ -192,7 +198,7 @@ class TestAlocador(unittest.TestCase):
         self.mock_config.colisoes_proibidas = {
             'outro_tipo': ['funcao_x']
         }
-        self.mock_config.designacoes_predefinidas = {
+        self.alocador._designacoes_predefinidas = {
             dt: [{'tipo': tipo_predefinido, 'pessoa': pessoa}]
         }
 
@@ -224,7 +230,7 @@ class TestAlocador(unittest.TestCase):
         pessoa = 'pessoa1'
         
         # Configura predefinição
-        self.mock_config.designacoes_predefinidas = {
+        self.alocador._designacoes_predefinidas = {
             dt: [{'tipo': 'leitura', 'pessoa': pessoa}]
         }
         # Configura colisoes (leitura não colide com funcao1)
@@ -253,7 +259,7 @@ class TestAlocador(unittest.TestCase):
             'p2': {'nome': 'Beto Souza'},
             'p3': {'nome': 'Carlos Lima'}
         }
-        self.mock_config.designacoes_predefinidas = {}
+        self.alocador._designacoes_predefinidas = {}
         self.mock_config.colisoes_proibidas = {}
         self.mock_config.tipos_designacoes_predefinidas = {}
         self.mock_config.cancelamentos = {}

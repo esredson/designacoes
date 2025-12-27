@@ -13,6 +13,7 @@ class Conversor:
         self.mes = config.mes
         self.ano = config.ano
         self.debug = config.debug
+        self.chaves_permitidas = chaves_permitidas
         
         # Carregar configurações
         self.pessoas_config = config.pessoas
@@ -80,6 +81,27 @@ class Conversor:
         return None
 
     def salvar_json(self, saida, caminho_json_saida):
+        # Injetar designações fixas (configuradas com "pessoa" no config.json)
+        if self.chaves_permitidas:
+            # Identifica o dicionário de designações (pode estar aninhado ou ser o próprio objeto)
+            alvo = saida.get('designacoes_predefinidas', saida)
+
+            for tipo, dados in self.tipos_designacoes.items():
+                if tipo in self.chaves_permitidas and 'pessoa' in dados:
+                    pessoa_fixa = dados['pessoa']
+                    
+                    for dt, lista_designacoes in alvo.items():
+                        # Garante que estamos iterando sobre uma lista de designações
+                        if isinstance(lista_designacoes, list):
+                            # Verifica se já existe designação desse tipo para essa data
+                            existe = any(d.get('tipo') == tipo for d in lista_designacoes)
+                            
+                            if not existe:
+                                lista_designacoes.append({
+                                    'tipo': tipo,
+                                    'pessoa': pessoa_fixa
+                                })
+
         with open(caminho_json_saida, 'w', encoding='utf-8') as f:
             json.dump(saida, f, indent=4, ensure_ascii=False)
         

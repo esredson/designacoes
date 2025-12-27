@@ -21,7 +21,7 @@ class Config:
         self._init_geral()
         self._init_funcional()
         self._init_agenda()
-        self._init_designacoes_predefinidas()
+        # self._init_designacoes_predefinidas() -> Removido, agora é responsabilidade do Alocador
 
     def _init_geral(self):
         config = self._raw_config['geral']
@@ -86,42 +86,44 @@ class Config:
         self._cancelamentos = cancelamentos
 
     def _init_designacoes_predefinidas(self):
-        padrao_arquivo = f"{self.ano}-{self.mes:02d}-predefinidas*.json"
-        caminho_padrao = os.path.join(self.diretorio_dados, padrao_arquivo)
-
-        arquivos_encontrados = glob.glob(caminho_padrao)
-        dados_designacoes_predefinidas = {}
-
-        if not arquivos_encontrados:
-            if self.debug:
-                print(f"AVISO: Nenhum arquivo de designações predefinidas encontrado com o padrão: {caminho_padrao}")
-        else:
-            for arquivo in arquivos_encontrados:
-                if self.debug:
-                    print(f"Carregando designações predefinidas de: {arquivo}")
-                with open(arquivo, 'r', encoding='utf-8') as f:
-                    conteudo_arquivo = json.load(f)
-                    if "designacoes_predefinidas" in conteudo_arquivo:
-                        dados = conteudo_arquivo["designacoes_predefinidas"]
-                        dados_designacoes_predefinidas.update(dados)
-                    else:
-                        if self.debug:
-                            print(f"AVISO: Arquivo {arquivo} não contém a chave 'designacoes_predefinidas'. Ignorando.")
+        pass # Deprecated: Logic moved to Alocador
         
-        if self.debug:
-            print("Conteúdo carregado de Designações Predefinidas:")
-            print(json.dumps(dados_designacoes_predefinidas, indent=4, ensure_ascii=False))
+        # padrao_arquivo = f"{self.ano}-{self.mes:02d}-predefinidas*.json"
+        # caminho_padrao = os.path.join(self.diretorio_dados, padrao_arquivo)
+
+        # arquivos_encontrados = glob.glob(caminho_padrao)
+        # dados_designacoes_predefinidas = {}
+
+        # if not arquivos_encontrados:
+        #     if self.debug:
+        #         print(f"AVISO: Nenhum arquivo de designações predefinidas encontrado com o padrão: {caminho_padrao}")
+        # else:
+        #     for arquivo in arquivos_encontrados:
+        #         if self.debug:
+        #             print(f"Carregando designações predefinidas de: {arquivo}")
+        #         with open(arquivo, 'r', encoding='utf-8') as f:
+        #             conteudo_arquivo = json.load(f)
+        #             if "designacoes_predefinidas" in conteudo_arquivo:
+        #                 dados = conteudo_arquivo["designacoes_predefinidas"]
+        #                 dados_designacoes_predefinidas.update(dados)
+        #             else:
+        #                 if self.debug:
+        #                     print(f"AVISO: Arquivo {arquivo} não contém a chave 'designacoes_predefinidas'. Ignorando.")
+        
+        # if self.debug:
+        #     print("Conteúdo carregado de Designações Predefinidas:")
+        #     print(json.dumps(dados_designacoes_predefinidas, indent=4, ensure_ascii=False))
             
-        # Gerar datas predefinidas
-        self._designacoes_predefinidas = {}
-        for str_data in dados_designacoes_predefinidas.keys():
-            dt = util.converter_string_para_data(str_data)
-            self._designacoes_predefinidas[dt] = dados_designacoes_predefinidas[str_data]
+        # # Gerar datas predefinidas
+        # self._designacoes_predefinidas = {}
+        # for str_data in dados_designacoes_predefinidas.keys():
+        #     dt = util.converter_string_para_data(str_data)
+        #     self._designacoes_predefinidas[dt] = dados_designacoes_predefinidas[str_data]
             
-        for dt in self._designacoes_predefinidas.keys():
-            if dt not in self.datas_validas: # Verifica contra datas validas (sem cancelamentos)
-                 if self.debug:
-                    print(f"Data predefinida {dt} não está entre as programadas")
+        # for dt in self._designacoes_predefinidas.keys():
+        #     if dt not in self.datas_validas: # Verifica contra datas validas (sem cancelamentos)
+        #          if self.debug:
+        #             print(f"Data predefinida {dt} não está entre as programadas")
 
     # Propriedades Gerais
     @property
@@ -153,5 +155,5 @@ class Config:
         return dts
 
     # Propriedades Designacoes Predefinidas
-    @property
-    def designacoes_predefinidas(self): return self._designacoes_predefinidas
+    # @property
+    # def designacoes_predefinidas(self): return self._designacoes_predefinidas
