@@ -8,10 +8,7 @@ import re
 import argparse
 import warnings
 from difflib import get_close_matches
-try:
-    from conversores.conversor import Conversor
-except ImportError:
-    from conversor import Conversor
+from extratores.extrator import Extrator
 
 # Suppress specific warnings
 warnings.filterwarnings("ignore", category=UserWarning, message=".*pin_memory.*")
@@ -20,7 +17,7 @@ warnings.filterwarnings("ignore", category=UserWarning, message=".*pin_memory.*"
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'src')))
 import util
 
-class ConversorFimSemanaJpeg(Conversor):
+class ExtratorFimSemanaJpeg(Extrator):
     def __init__(self, config):
         chaves_permitidas = ['presidente_fim_semana', 'orador', 'sentinela', 'leitura_sentinela']
         super().__init__(config, chaves_permitidas)
@@ -257,8 +254,8 @@ if __name__ == "__main__":
         # Inicialização centralizada
         args, config, mes, ano = inicializar(descricao='Converte JPEG de designações para JSON.')
 
-        conversor = ConversorFimSemanaJpeg(config)
-        conversor.executar()
+        extrator = ExtratorFimSemanaJpeg(config)
+        extrator.executar()
         
     except Exception as e:
         print(f"Erro: {str(e)}")

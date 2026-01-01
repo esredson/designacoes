@@ -7,7 +7,7 @@ from difflib import get_close_matches
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'src')))
 import util
 
-class Conversor:
+class Extrator:
     def __init__(self, config, chaves_permitidas=None):
         self.config = config
         self.mes = config.mes

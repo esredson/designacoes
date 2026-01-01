@@ -5,5 +5,5 @@ myenv/
 .venv/
 data/
 tests/__pycache__/*
-src/conversores/__pycache__/
+src/extratores/__pycache__/
 debug/

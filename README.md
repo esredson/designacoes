@@ -32,7 +32,7 @@ Antes de executar a ferramenta pela primeira vez, é necessário configurar o am
         - As regras de **tarefas predefinidas** (ex: mapeamento de nomes de atividades externas para tipos de função interna).
 
 2.  **Arquivos de Entrada**:
-    - Coloque os arquivos de entrada necessários para os conversores na pasta `data/`.
+    - Coloque os arquivos de entrada necessários para os extratores na pasta `data/`.
     - Estes arquivos (imagens ou PDFs contendo a programação externa) devem seguir o padrão de nomenclatura esperado pelo sistema para o mês e ano desejados.
 
 ## Execução
@@ -51,7 +51,7 @@ python src/main.py --mes 12 --ano 2025
 
 ### Modo Debug
 
-Para visualizar detalhes do processo, logs detalhados dos conversores e pontuações do algoritmo passo-a-passo, utilize a flag `--debug`:
+Para visualizar detalhes do processo, logs detalhados dos extratores e pontuações do algoritmo passo-a-passo, utilize a flag `--debug`:
 
 ```bash
 python src/main.py --mes 12 --ano 2025 --debug
@@ -88,10 +88,10 @@ O sistema é modular. Se você precisar rodar apenas uma etapa específica (por 
 
 Certifique-se de estar na raiz do projeto ao executar estes comandos:
 
-- **Apenas Conversores**:
-  Os conversores podem ser executados individualmente para ler os arquivos de entrada e gerar os JSONs de tarefas predefinidas na pasta `data/`.
+- **Apenas Extratores**:
+  Os extratores podem ser executados individualmente para ler os arquivos de entrada e gerar os JSONs de tarefas predefinidas na pasta `data/`.
   ```bash
-  python src/conversores/<nome_do_conversor>.py --mes 12 --ano 2025
+  python src/extratores/<nome_do_extrator>.py --mes 12 --ano 2025
   ```
 
 - **Apenas Alocador**:

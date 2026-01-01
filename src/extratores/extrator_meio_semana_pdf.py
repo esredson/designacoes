@@ -3,13 +3,10 @@ import re
 import os
 import sys
 import argparse
-try:
-    from conversores.conversor import Conversor
-except ImportError:
-    from conversor import Conversor
+from extratores.extrator import Extrator
 import util
 
-class ConversorMeioSemanaPdf(Conversor):
+class ExtratorMeioSemanaPdf(Extrator):
     def __init__(self, config):
         chaves_permitidas = [
             'presidente_meio_semana', 'tesouros', 'joias', 'leitura_biblia', 
@@ -94,7 +91,7 @@ class ConversorMeioSemanaPdf(Conversor):
                         
                         mes_numero = meses.get(mes_nome, self.mes)
                         
-                        # Assumimos ano do conversor (mesmo que o mês mude para o próximo ano)
+                        # Assumimos ano do extrator (mesmo que o mês mude para o próximo ano)
                         data_str = f"{dia:02d}/{mes_numero:02d}/{self.ano}"
                         current_date = data_str
                         if current_date not in designacoes:
@@ -454,8 +451,8 @@ if __name__ == "__main__":
         # Nota: inicializar() carrega configs que não usamos aqui, mas garante consistência de args (mes/ano)
         args, config, mes, ano = inicializar(descricao='Converte PDF de designações de meio de semana para JSON.')
 
-        conversor = ConversorMeioSemanaPdf(config)
-        conversor.executar()
+        extrator = ExtratorMeioSemanaPdf(config)
+        extrator.executar()
         
     except Exception as e:
         print(f"Erro: {str(e)}")
