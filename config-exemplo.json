@@ -1,0 +1,32 @@
+{
+    "geral": {
+        "titulo": "Escala de Tarefas",
+        "subtitulo": "Departamento de TI"
+    },
+    "funcional":{
+        "pessoas": {
+            "joao": { "nome": "João Silva" },
+            "maria": { "nome": "Maria Santos" },
+            "pedro": { "nome": "Pedro Oliveira" }
+        },
+        "tipos_designacoes_predefinidas": {
+            "plantao_externo": "Plantão Externo (Importado)",
+            "viagem_corporativa": "Viagem a Trabalho"
+        },
+        "funcoes": {
+            "suporte_nivel_1": { "pessoas": ["joao", "maria"] },
+            "suporte_nivel_2": { "pessoas": ["pedro", "maria"] },
+            "monitoramento": { "pessoas": ["joao", "pedro"] }
+        },
+        "colisoes_proibidas": {
+            "plantao_externo": ["suporte_nivel_1", "suporte_nivel_2"],
+            "viagem_corporativa": ["suporte_nivel_1", "suporte_nivel_2", "monitoramento"]
+        }
+    },
+    "agenda": {
+        "dias_semana": ["seg", "qua", "sex"],
+        "cancelamentos": {
+            "25/12/2025": "Natal"
+        }
+    }
+}
