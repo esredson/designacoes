@@ -50,12 +50,17 @@ class Config:
         config = self._raw_config['agenda']
         dias_semana = config["dias_semana"]
         
-        # Gerar datas
-        # locale.setlocale(locale.LC_TIME, 'pt_PT.UTF-8') # Evitar mudar locale globalmente se possível, mas mantendo lógica original
-        try:
-            locale.setlocale(locale.LC_TIME, 'pt_PT.UTF-8')
-        except:
-            pass # Fallback se não tiver o locale
+        # Mapeamento robusto de dias da semana (0=Segunda, 6=Domingo)
+        # Evita problemas de locale/encoding
+        mapa_dias = {
+            0: ["seg", "segunda", "mon", "monday"],
+            1: ["ter", "terça", "terca", "tue", "tuesday"],
+            2: ["qua", "quarta", "wed", "wednesday"],
+            3: ["qui", "quinta", "thu", "thursday"],
+            4: ["sex", "sexta", "fri", "friday"],
+            5: ["sab", "sáb", "sábado", "sabado", "sat", "saturday"],
+            6: ["dom", "domingo", "sun", "sunday"]
+        }
 
         datas = []
         # Usar self.mes e self.ano em vez de util.obter_mes_ano_referencia
@@ -64,8 +69,12 @@ class Config:
                 data = datetime.date(self.ano, self.mes, dia)
             except ValueError:
                 continue
-            dia_semana = data.strftime('%A').lower()
-            if any(d in dia_semana for d in dias_semana):
+            
+            dia_semana_int = data.weekday()
+            termos_aceitos = mapa_dias[dia_semana_int]
+            
+            # Verifica se algum dos termos configurados (ex: "sáb") está na lista de termos aceitos para este dia
+            if any(d.lower() in termos_aceitos for d in dias_semana):
                 datas.append(data)
         self._datas = datas
 
