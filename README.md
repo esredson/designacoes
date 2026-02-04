@@ -20,7 +20,10 @@ O algoritmo busca minimizar uma pontuação composta por três métricas princip
 
 1.  **Variância Vertical (Intervalo entre tarefas)**: Penaliza quando a mesma pessoa é designada em dias muito próximos (ex: dias consecutivos). O objetivo é espaçar as tarefas de uma pessoa o máximo possível.
 2.  **Variância Horizontal (Equilíbrio entre funções)**: Penaliza se uma pessoa faz muito uma função e pouco outra para a qual também está habilitada. O objetivo é que a pessoa atue em todas as funções que sabe fazer de forma equilibrada.
-3.  **Variância de Distribuição (Carga total)**: Penaliza o desequilíbrio na quantidade total de tarefas entre as pessoas. O objetivo é que todos trabalhem uma quantidade similar de vezes no mês.
+3.  **Variância de Distribuição (Carga total ponderada)**: Penaliza o desvio da carga de trabalho real em relação à carga desejada configurada pelo atributo `peso`.
+    - Se todas as pessoas tiverem `peso: 1.0`, o sistema tentará distribuir as tarefas igualmente.
+    - Se uma pessoa tiver `peso: 0.5`, o sistema tentará atribuir a ela metade das tarefas que atribuiria a alguém com peso 1.0.
+    - Isso permite ajustar a carga de trabalho para pessoas que têm menos disponibilidade.
 
 ### Restrições e Colisões
 
@@ -76,9 +79,9 @@ O arquivo é dividido em seções principais:
     },
     "funcional":{
         "pessoas": {
-            "joao": { "nome": "João Silva" },
-            "maria": { "nome": "Maria Santos" },
-            "pedro": { "nome": "Pedro Oliveira" }
+            "joao": { "nome": "João Silva", "peso": 1.0 },
+            "maria": { "nome": "Maria Santos", "peso": 0.5 },
+            "pedro": { "nome": "Pedro Oliveira", "peso": 1.0 }
         },
         "tipos_designacoes_predefinidas": {
             "plantao_externo": "Plantão Externo (Importado)",
