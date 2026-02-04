@@ -7,3 +7,5 @@ data/
 tests/__pycache__/*
 src/extratores/__pycache__/
 debug/
+log/*
+!log/.gitkeep

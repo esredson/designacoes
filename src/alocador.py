@@ -248,7 +248,20 @@ class Alocador:
                 fila_pessoas_para_alocacao += pessoas_da_funcao # Esgotou o pool de pessoas disponíveis? Repete o pool
                 pessoa = self._obter_proxima_pessoa_da_fila(fila_pessoas_para_alocacao, funcao, dt, df)
             if pessoa is None:
-                raise "Não há pessoas disponíveis para a função"
+                # Diagnóstico de falha
+                candidatos = self.config.funcoes[funcao]['pessoas']
+                detalhes = []
+                for p in candidatos:
+                    nome = self.config.pessoas[p]['nome']
+                    motivo = "Indisponível (Outro)"
+                    if self._pessoa_ja_estah_alocada_na_data(p, dt, df):
+                        motivo = "Já possui designação interna hoje"
+                    elif self._pessoa_estah_impedida_para_a_funcao_na_data(p, funcao, dt):
+                        motivo = "Colisão proibida"
+                    detalhes.append(f"{nome}: {motivo}")
+                
+                msg_detalhada = "; ".join(detalhes)
+                raise Exception(f"Não há pessoas disponíveis para a função '{funcao}' na data {dt.strftime('%d/%m/%Y')}. Candidatos verificados: [{msg_detalhada}]")
             df.at[dt, funcao] = pessoa
 
             fila_pessoas_para_alocacao = util.remover_primeira_ocorrencia(pessoa, fila_pessoas_para_alocacao)
