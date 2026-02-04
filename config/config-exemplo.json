@@ -5,9 +5,9 @@
     },
     "funcional":{
         "pessoas": {
-            "joao": { "nome": "João Silva" },
-            "maria": { "nome": "Maria Santos" },
-            "pedro": { "nome": "Pedro Oliveira" }
+            "joao": { "nome": "João Silva", "peso": 1.0 },
+            "maria": { "nome": "Maria Santos", "peso": 0.5 },
+            "pedro": { "nome": "Pedro Oliveira", "peso": 0.2 }
         },
         "tipos_designacoes_predefinidas": {
             "plantao_externo": "Plantão Externo (Importado)",

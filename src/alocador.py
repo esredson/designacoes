@@ -323,13 +323,23 @@ class Alocador:
         # Count occurrences in the current solution
         solution_counts = pd.Series(df.values.flatten()).value_counts()
         
-        # Combine with designacoes_predefinidas counts
-        total_counts = []
-        for pessoa in self.config.pessoas.keys():
-            count = solution_counts.get(pessoa, 0) + designacoes_predefinidas_counts.get(pessoa, 0)
-            total_counts.append(count)
+        # Combine with designacoes_predefinidas counts and normalize by weight
+        normalized_counts = []
+        for pessoa_key, pessoa_data in self.config.pessoas.items():
+            count = solution_counts.get(pessoa_key, 0) + designacoes_predefinidas_counts.get(pessoa_key, 0)
             
-        return np.var(total_counts)
+            # Obter peso (padrão 1.0 se não existir)
+            peso = pessoa_data.get('peso', 1.0)
+            
+            if peso > 0:
+                normalized_counts.append(count / peso)
+            else:
+                 # Se peso é 0, não deveria ter designações. Se tiver, penalidade alta?
+                 # Por enquanto, ignoramos da variância se peso é 0, assumindo que hard constraints cuidam disso
+                 # ou que o usuário quer que essa pessoa não afete o balanço dos outros.
+                 pass
+            
+        return np.var(normalized_counts) if normalized_counts else 0
 
     @property
     def solucao(self):
