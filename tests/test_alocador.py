@@ -142,6 +142,38 @@ class TestAlocador(unittest.TestCase):
         score = self.alocador._quantificar_variancia_distribuicao(df, predefined_counts)
         self.assertAlmostEqual(score, 0.0)
 
+    def test_quantificar_variancia_distribuicao_ignora_pessoa_sem_funcao_elegivel(self):
+        # Cenário: pessoa3 existe no cadastro mas não está elegível para
+        # nenhuma função (não aparece em funcao1 nem funcao2). Ela deve
+        # ser ignorada no cálculo, mesmo tendo contagem alta em designações
+        # predefinidas, pois nunca poderia receber uma designação de fato.
+        self.mock_config.pessoas = {
+            'pessoa1': {'nome': 'Pessoa 1'},
+            'pessoa2': {'nome': 'Pessoa 2'},
+            'pessoa3': {'nome': 'Pessoa 3'}
+        }
+        # funcao1/funcao2 (definidas no setUp) continuam elegíveis só para pessoa1 e pessoa2
+
+        data = {
+            'funcao1': ['pessoa1', 'pessoa1', 'pessoa2', 'pessoa2'],
+            'funcao2': ['pessoa2', 'pessoa2', 'other', 'other']
+        }
+        df = pd.DataFrame(data)
+
+        predefined_counts = {
+            'pessoa1': 2,
+            'pessoa2': 0,
+            'pessoa3': 99  # não deveria influenciar o resultado
+        }
+
+        # pessoa1: 2 + 2 = 4
+        # pessoa2: 4 + 0 = 4
+        # pessoa3: ignorada (sem função elegível)
+        # Var([4, 4]) = 0
+
+        score = self.alocador._quantificar_variancia_distribuicao(df, predefined_counts)
+        self.assertAlmostEqual(score, 0.0)
+
     def test_colisao_proibida_respeitada(self):
         # Configuração do cenário
         dt = datetime.date(2025, 12, 1)
