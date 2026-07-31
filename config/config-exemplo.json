@@ -21,6 +21,11 @@
         "colisoes_proibidas": {
             "plantao_externo": ["suporte_nivel_1", "suporte_nivel_2"],
             "viagem_corporativa": ["suporte_nivel_1", "suporte_nivel_2", "monitoramento"]
+        },
+        "pesos_score": {
+            "vertical": 1.0,
+            "horizontal": 1.0,
+            "distribuicao": 1.0
         }
     },
     "agenda": {

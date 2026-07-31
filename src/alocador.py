@@ -339,6 +339,10 @@ class Alocador:
         # Combine with designacoes_predefinidas counts and normalize by weight
         normalized_counts = []
         for pessoa_key, pessoa_data in self.config.pessoas.items():
+            funcoes_eligible = [f for f, data in self.config.funcoes.items() if pessoa_key in data['pessoas']]
+            if not funcoes_eligible:
+                continue
+
             count = solution_counts.get(pessoa_key, 0) + designacoes_predefinidas_counts.get(pessoa_key, 0)
             
             # Obter peso (padrão 1.0 se não existir)
@@ -385,7 +389,11 @@ class Alocador:
         caminho_arquivo_csv = os.path.join('data', nome_arquivo_csv)
         
         print("Montando as designações...")
-        self._executar()
+        self._executar(
+            peso_vertical=self.config.peso_score_vertical,
+            peso_horizontal=self.config.peso_score_horizontal,
+            peso_distribuicao=self.config.peso_score_distribuicao,
+        )
 
         if self._debug:
             print(self.solucao)

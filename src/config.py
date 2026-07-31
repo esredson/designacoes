@@ -32,6 +32,11 @@ class Config:
         config = self._raw_config['funcional']
         self._pessoas = config['pessoas']
         self._tipos_designacoes_predefinidas = config['tipos_designacoes_predefinidas']
+
+        pesos_score = config.get('pesos_score', {})
+        self._peso_score_vertical = pesos_score.get('vertical', 1.0)
+        self._peso_score_horizontal = pesos_score.get('horizontal', 1.0)
+        self._peso_score_distribuicao = pesos_score.get('distribuicao', 1.0)
         
         # Gerar funções e validar pessoas
         self._funcoes = config['funcoes']
@@ -149,6 +154,12 @@ class Config:
     def colisoes_proibidas(self): return self._colisoes_proibidas
     @property
     def tipos_designacoes_predefinidas(self): return self._tipos_designacoes_predefinidas
+    @property
+    def peso_score_vertical(self): return self._peso_score_vertical
+    @property
+    def peso_score_horizontal(self): return self._peso_score_horizontal
+    @property
+    def peso_score_distribuicao(self): return self._peso_score_distribuicao
 
     # Propriedades Agenda
     @property
