@@ -145,8 +145,9 @@ O sistema é modular. Se você precisar rodar apenas uma etapa específica (por 
 Certifique-se de estar na raiz do projeto ao executar estes comandos:
 
 - **Apenas Extratores**:
-  Os extratores podem ser executados individualmente para ler os arquivos de entrada e gerar os JSONs de tarefas predefinidas na pasta `data/`.
+  Os extratores podem ser executados todos de uma vez, ou individualmente, para ler os arquivos de entrada e gerar os JSONs de tarefas predefinidas na pasta `data/`.
   ```bash
+  python src/extratores/extratores.py --mes 12 --ano 2025
   python src/extratores/<nome_do_extrator>.py --mes 12 --ano 2025
   ```
 

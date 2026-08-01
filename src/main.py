@@ -10,7 +10,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from alocador import Alocador
 from gerador_pdf import GeradorPDF
-import extratores
+from extratores import extratores
 from inicializacao import inicializar
 from config import Config
 

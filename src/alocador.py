@@ -227,7 +227,7 @@ class Alocador:
                 
         return nova_solucao
 
-    def _alocar(self, max_tentativas=50):
+    def _alocar(self, max_tentativas=10):
         # Coloca as funções em ordem de núm. de pessoas disponíveis, pra iniciar a alocação pela função mais restrita:
         funcoes_ordem_num_pessoas_asc = sorted(self.config.funcoes.keys(), key=lambda funcao: len(self.config.funcoes[funcao]['pessoas']))
 
