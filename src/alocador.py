@@ -10,9 +10,6 @@ import json
 
 #from tqdm import tqdm
 
-class _FalhaAlocacao(Exception):
-    pass
-
 class Alocador:
 
     def __init__(self, config):
@@ -227,26 +224,19 @@ class Alocador:
                 
         return nova_solucao
 
-    def _alocar(self, max_tentativas=10):
+    def _alocar(self):
+        df = pd.DataFrame(
+            columns=self.config.funcoes.keys(),
+            index=self.config.datas_validas
+        )
+
         # Coloca as funções em ordem de núm. de pessoas disponíveis, pra iniciar a alocação pela função mais restrita:
         funcoes_ordem_num_pessoas_asc = sorted(self.config.funcoes.keys(), key=lambda funcao: len(self.config.funcoes[funcao]['pessoas']))
 
-        ultima_excecao = None
-        for tentativa in range(1, max_tentativas + 1):
-            df = pd.DataFrame(
-                columns=self.config.funcoes.keys(),
-                index=self.config.datas_validas
-            )
-            try:
-                for funcao in funcoes_ordem_num_pessoas_asc:
-                    self._alocar_pessoas_para_funcao(funcao, df)
-                return df
-            except _FalhaAlocacao as e:
-                ultima_excecao = e
-                if self._debug:
-                    print(f"DEBUG: Tentativa {tentativa}/{max_tentativas} de alocação falhou: {e}")
+        for funcao in funcoes_ordem_num_pessoas_asc:
+            self._alocar_pessoas_para_funcao(funcao, df)
 
-        raise Exception(f"Não foi possível montar uma alocação válida após {max_tentativas} tentativas. Último erro (tentativa {max_tentativas}/{max_tentativas}): {ultima_excecao}")
+        return df
 
     def _alocar_pessoas_para_funcao(self, funcao, df):
         pessoas_da_funcao=self.config.funcoes[funcao]['pessoas']
@@ -271,7 +261,7 @@ class Alocador:
                     detalhes.append(f"{nome}: {motivo}")
                 
                 msg_detalhada = "; ".join(detalhes)
-                raise _FalhaAlocacao(f"Não há pessoas disponíveis para a função '{funcao}' na data {dt.strftime('%d/%m/%Y')}. Candidatos verificados: [{msg_detalhada}]")
+                raise Exception(f"Não há pessoas disponíveis para a função '{funcao}' na data {dt.strftime('%d/%m/%Y')}. Candidatos verificados: [{msg_detalhada}]")
             df.at[dt, funcao] = pessoa
 
             fila_pessoas_para_alocacao = util.remover_primeira_ocorrencia(pessoa, fila_pessoas_para_alocacao)
