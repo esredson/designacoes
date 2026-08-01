@@ -155,8 +155,8 @@ class Alocador:
             # Ordena por data
             self._solucao.sort_index(inplace=True)
 
-        # Substitui IDs pelos Primeiros Nomes (para o CSV/PDF)
-        self._solucao.replace({k: v['nome'].split()[0] for k, v in self.config.pessoas.items()}, inplace=True)
+        # Substitui IDs pelos Nomes de Exibição (ou Primeiro Nome, na ausência) (para o CSV/PDF)
+        self._solucao.replace({k: v.get('nome_exibicao') or v['nome'].split()[0] for k, v in self.config.pessoas.items()}, inplace=True)
         
         # Renomeia colunas para MultiIndex (Icone, Nome)
         novas_colunas = []
